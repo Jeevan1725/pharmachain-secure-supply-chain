@@ -332,6 +332,227 @@ def add_phase_1(doc):
     doc.add_page_break()
 
 
+# ---------- Phase 2 ----------
+
+def add_phase_2(doc):
+    h1(doc, "Phase 2 - Requirements Engineering")
+
+    h2(doc, "2.1 Stakeholders and User Types")
+    doc.add_paragraph(
+        "PharmaChain involves 5 primary actors (one per organization in the "
+        "supply chain) plus 3 justified supporting roles required for "
+        "regulatory compliance and security."
+    )
+
+    t = doc.add_table(rows=1, cols=5)
+    t.style = "Table Grid"
+    hdr = t.rows[0].cells
+    hdr[0].text = "#"
+    hdr[1].text = "Stakeholder"
+    hdr[2].text = "Type"
+    hdr[3].text = "Goal"
+    hdr[4].text = "Key Concern"
+    rows = [
+        ("1", "Manufacturer", "Primary Actor",
+         "Create and serialize drug products",
+         "Anti-counterfeit, batch traceability"),
+        ("2", "Distributor", "Primary Actor",
+         "Move products between orgs, transfer ownership",
+         "Non-repudiation of transfer"),
+        ("3", "Warehouse", "Primary Actor",
+         "Receive, store, dispatch shipments",
+         "Tamper-proof receipts"),
+        ("4", "Retailer", "Primary Actor",
+         "Receive products, sell to customers",
+         "Authenticity verification"),
+        ("5", "Customer / Patient", "Primary Actor",
+         "Verify drug authenticity",
+         "Trust, privacy"),
+        ("6", "Auditor / Regulator (FDA)", "Secondary Actor",
+         "Inspect immutable history",
+         "Compliance, tamper evidence"),
+        ("7", "System Administrator", "Supporting Actor",
+         "Onboard orgs, manage keys",
+         "Least privilege, key lifecycle"),
+        ("8", "Security Officer", "Supporting Actor",
+         "Monitor anomalies and threats",
+         "Real-time alerts, SIEM"),
+    ]
+    for r in rows:
+        cells = t.add_row().cells
+        for i, val in enumerate(r):
+            cells[i].text = val
+    style_table(t)
+
+    doc.add_paragraph()
+    p = doc.add_paragraph()
+    p.add_run("Justification for extra actors: ").bold = True
+    p.add_run(
+        "PharmaChain is regulated (FDA DSCSA) and cross-organizational. "
+        "An Auditor is required for regulatory inspection. An Admin is needed "
+        "to onboard/offboard organizations. A Security Officer is required to "
+        "detect fraud, key abuse, and anomalous transfers."
+    )
+
+    h2(doc, "2.2 Functional Requirements (FR)")
+    t = doc.add_table(rows=1, cols=4)
+    t.style = "Table Grid"
+    hdr = t.rows[0].cells
+    hdr[0].text = "ID"
+    hdr[1].text = "Requirement"
+    hdr[2].text = "Actor"
+    hdr[3].text = "Priority"
+    frs = [
+        ("FR-01", "Register a new product with a globally unique serial number", "Manufacturer", "High"),
+        ("FR-02", "Create a shipment linking source org, destination org, product batch", "Manufacturer / Distributor", "High"),
+        ("FR-03", "Confirm warehouse receipt with seal/hash verification", "Warehouse", "High"),
+        ("FR-04", "Transfer ownership between organizations with signature", "Distributor / Retailer", "High"),
+        ("FR-05", "Confirm delivery to retailer / customer", "Retailer", "High"),
+        ("FR-06", "Query product status and full history", "Any authenticated actor", "High"),
+        ("FR-07", "Verify product authenticity via QR / serial lookup", "Customer", "High"),
+        ("FR-08", "View immutable audit trail (read-only)", "Auditor", "High"),
+        ("FR-09", "Onboard / offboard an organization with PKI certificate", "Admin", "High"),
+        ("FR-10", "Rotate or revoke signing keys", "Admin", "Medium"),
+        ("FR-11", "Raise and resolve a dispute between organizations", "Distributor / Retailer", "Medium"),
+        ("FR-12", "Trigger product recall (trace backward to source)", "Manufacturer / Auditor", "Medium"),
+        ("FR-13", "Receive real-time shipment status notifications", "All logistics actors", "Medium"),
+        ("FR-14", "Detect anomalous ownership transfers (rule/ML based)", "Security Officer", "Medium"),
+    ]
+    for r in frs:
+        cells = t.add_row().cells
+        for i, val in enumerate(r):
+            cells[i].text = val
+    style_table(t)
+
+    h2(doc, "2.3 Non-Functional Requirements (NFR)")
+    t = doc.add_table(rows=1, cols=4)
+    t.style = "Table Grid"
+    hdr = t.rows[0].cells
+    hdr[0].text = "ID"
+    hdr[1].text = "Category"
+    hdr[2].text = "Requirement"
+    hdr[3].text = "Target"
+    nfrs = [
+        ("NFR-01", "Availability", "System uptime", "99.9% (monthly)"),
+        ("NFR-02", "Performance", "Product history lookup latency", "p95 < 1s"),
+        ("NFR-03", "Scalability", "Concurrent shipments per day", "10,000+"),
+        ("NFR-04", "Scalability", "Organizations onboarded", "100+"),
+        ("NFR-05", "Interoperability", "Standards compliance", "GS1 EPCIS 2.0, FDA DSCSA"),
+        ("NFR-06", "Privacy", "Customer PII handling", "GDPR + HIPAA-aligned"),
+        ("NFR-07", "Maintainability", "Test coverage on critical modules", ">= 80%"),
+        ("NFR-08", "Disaster Recovery", "RPO / RTO", "RPO <= 5 min, RTO <= 1 hour"),
+        ("NFR-09", "Auditability", "Log retention", "7 years (pharma regulation)"),
+        ("NFR-10", "Usability", "Common operation time", "<= 3 clicks for status check"),
+    ]
+    for r in nfrs:
+        cells = t.add_row().cells
+        for i, val in enumerate(r):
+            cells[i].text = val
+    style_table(t)
+
+    h2(doc, "2.4 Security Requirements (SR)")
+    t = doc.add_table(rows=1, cols=4)
+    t.style = "Table Grid"
+    hdr = t.rows[0].cells
+    hdr[0].text = "ID"
+    hdr[1].text = "Category"
+    hdr[2].text = "Requirement"
+    hdr[3].text = "CIA/Auth"
+    srs = [
+        ("SR-01", "Authentication", "Multi-factor authentication per user", "Auth"),
+        ("SR-02", "Authentication", "mTLS between organizations (PKI)", "Auth"),
+        ("SR-03", "Integrity", "Every ownership transfer must be digitally signed, hash-chained, and audit-logged", "I, NR"),
+        ("SR-04", "Integrity", "Product records SHA-256 hashed on every change", "I"),
+        ("SR-05", "Integrity", "Anti-replay via nonce + timestamp on every signed write", "I"),
+        ("SR-06", "Authorization", "Role-Based Access Control (RBAC) per role", "Authz"),
+        ("SR-07", "Authorization", "Attribute-Based Access Control (ABAC) per organization", "Authz"),
+        ("SR-08", "Confidentiality", "TLS 1.3 in transit, AES-256 at rest", "C"),
+        ("SR-09", "Confidentiality", "Field-level encryption for customer PII", "C"),
+        ("SR-10", "Audit", "Append-only immutable audit log of every state change", "I, NR"),
+        ("SR-11", "Audit", "Logs forwarded to SIEM with tamper-evident hashing", "I"),
+        ("SR-12", "Non-Repudiation", "Digital signatures on all state-changing actions", "NR"),
+        ("SR-13", "Key Management", "HSM-backed keys, 90-day rotation", "C, I"),
+        ("SR-14", "Anomaly Detection", "Alert on duplicate serial, odd-hour transfer, or unusual pattern", "I"),
+        ("SR-15", "Availability", "DDoS protection at API Gateway", "A"),
+        ("SR-16", "Trust Boundaries", "Cross-org calls only via authenticated, signed APIs", "Auth, I"),
+    ]
+    for r in srs:
+        cells = t.add_row().cells
+        for i, val in enumerate(r):
+            cells[i].text = val
+    style_table(t)
+
+    h2(doc, "2.5 Prioritization (MoSCoW)")
+    t = doc.add_table(rows=1, cols=2)
+    t.style = "Table Grid"
+    hdr = t.rows[0].cells
+    hdr[0].text = "Priority"
+    hdr[1].text = "Requirements"
+    moscow = [
+        ("Must Have", "FR-01..FR-05, FR-08, FR-09, SR-01..SR-12, NFR-01, NFR-06, NFR-09"),
+        ("Should Have", "FR-06, FR-07, FR-10..FR-12, SR-13..SR-16, NFR-02..NFR-05, NFR-07"),
+        ("Could Have", "FR-13, FR-14, NFR-08, NFR-10"),
+        ("Won't Have (this release)", "Public blockchain anchoring, cross-chain interop"),
+    ]
+    for r in moscow:
+        cells = t.add_row().cells
+        cells[0].text, cells[1].text = r[0], r[1]
+    style_table(t)
+
+    h2(doc, "2.6 CIA / Auth / Authz / Audit Mapping")
+    t = doc.add_table(rows=1, cols=2)
+    t.style = "Table Grid"
+    hdr = t.rows[0].cells
+    hdr[0].text = "Category"
+    hdr[1].text = "Requirements"
+    mapping = [
+        ("Confidentiality (C)", "SR-08, SR-09, SR-13 (keys), NFR-06"),
+        ("Integrity (I)", "SR-03, SR-04, SR-05, SR-10, SR-11, SR-14"),
+        ("Availability (A)", "NFR-01, SR-15"),
+        ("Authentication (Auth)", "SR-01, SR-02, SR-16"),
+        ("Authorization (Authz)", "SR-06, SR-07"),
+        ("Audit (Aud)", "SR-10, SR-11, NFR-09"),
+        ("Non-Repudiation (NR)", "SR-03, SR-12"),
+    ]
+    for r in mapping:
+        cells = t.add_row().cells
+        cells[0].text, cells[1].text = r[0], r[1]
+    style_table(t)
+
+    h2(doc, "2.7 Traceability Thread (Carried Forward)")
+    p = doc.add_paragraph()
+    r = p.add_run("SR-03")
+    r.bold = True
+    r.font.color.rgb = ACCENT
+    p.add_run(
+        " = Every ownership transfer must be digitally signed, "
+        "hash-chained, and audit-logged."
+    )
+    doc.add_paragraph(
+        "Mapped to FR-04 (transfer ownership), NFR-09 (log retention), "
+        "SR-12 (non-repudiation). Will thread through Use Case, DFD, Threat "
+        "Model, Attack Tree, User Story, Code, Test, and Deployment phases."
+    )
+
+    h2(doc, "2.8 Assumptions and Constraints")
+    h3(doc, "Assumptions")
+    for b in [
+        "Each organization has PKI-issued certificates from a shared CA.",
+        "Organizations are known/trusted (permissioned network, not public).",
+        "Customers have smartphones with QR scanning capability.",
+    ]:
+        doc.add_paragraph(b, style="List Bullet")
+
+    h3(doc, "Constraints")
+    for b in [
+        "Must comply with FDA DSCSA and GS1 EPCIS 2.0.",
+        "Must use HSM for signing key storage (no soft keys in production).",
+        "Regulatory log retention: 7 years minimum.",
+    ]:
+        doc.add_paragraph(b, style="List Bullet")
+
+    doc.add_page_break()
+
 # ---------- main ----------
 
 def main():
@@ -349,6 +570,7 @@ def main():
     build_title_page(doc)
     build_toc_and_thread(doc)
     add_phase_1(doc)
+    add_phase_2(doc)
     # Future phases appended here.
 
     doc.save(DOC_PATH)
