@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ownership-service
+  namespace: scm
+  labels:
+    app: ownership-service
+spec:
+  type: ClusterIP
+  selector:
+    app: ownership-service
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
+      protocol: TCP

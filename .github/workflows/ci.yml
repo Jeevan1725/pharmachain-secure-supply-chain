@@ -1,0 +1,41 @@
+name: ci-cd
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-test-secure:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+          pip install pytest pytest-cov bandit pip-audit hypothesis
+
+      - name: Unit tests with coverage
+        run: pytest tests/unit --cov=src/pharmachain --cov-report=term-missing
+
+      - name: SAST with Bandit
+        run: bandit -r src/ -f txt
+
+      - name: Dependency scan with pip-audit
+        run: pip-audit || true
+
+      - name: Build container
+        run: docker build -t pharmachain:${{ github.sha }} -f docker/Dockerfile .
+
+      - name: Artifact integrity note
+        run: echo "In production, sign artifact with cosign"

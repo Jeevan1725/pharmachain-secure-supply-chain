@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pharmachain-config
+  namespace: scm
+data:
+  LOG_LEVEL: "INFO"
+  DB_HOST: "postgres.scm.svc.cluster.local"
+  LEDGER_URL: "fabric-peer0.scm.svc.cluster.local:7051"

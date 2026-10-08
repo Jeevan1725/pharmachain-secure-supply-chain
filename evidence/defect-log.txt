@@ -1,0 +1,25 @@
+PharmaChain Defect Log - Phase 14
+=================================
+
+DEF-001  (Medium)  Empty shipment_id crashes API with 500
+  Found by    : Fuzzing (Hypothesis)
+  Fix         : Input validation in shipment endpoint
+  Retest      : PASS
+
+DEF-002  (High)    Vulnerable transitive dependencies (python-jose, ecdsa)
+  Found by    : pip-audit (dependency scan)
+  Details     :
+      - python-jose 3.5.0   -> CVE-2026-85394
+      - ecdsa       0.19.2  -> PYSEC-2026-1325
+  Impact      : Potential cryptographic bypass in token handling (if used)
+  Analysis    : Neither library is imported anywhere in src/. They were
+                added as transitive dependencies in Phase 1 requirements.txt.
+  Fix         : Removed python-jose, ecdsa, rsa, pyasn1, passlib from
+                requirements.txt. Bcrypt is used directly instead of passlib.
+  Retest      : pip-audit -> No known vulnerabilities found
+  Status      : FIXED
+
+DEF-003  (Low)     datetime.utcnow() deprecation warning
+  Found by    : pytest warnings
+  Fix         : Change to datetime.now(datetime.UTC)
+  Status      : OPEN (accepted low risk - Python 3.13 warning only)

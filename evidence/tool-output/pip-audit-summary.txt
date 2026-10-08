@@ -1,0 +1,15 @@
+﻿At line:1 char:1
++ pip-audit 2>&1 |
++ ~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Found 3 known v...s in 2 packages:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+Name        Version ID              Fix Versions
+----------- ------- --------------- ------------
+ecdsa       0.19.2  PYSEC-2026-1325
+ecdsa       0.19.2  PYSEC-2026-1325
+python-jose 3.5.0   CVE-2026-85394
+
+Name        Skip Reason
+----------- --------------------------------------------------------------------------
+pharmachain Dependency not found on PyPI and could not be audited: pharmachain (0.1.0)
