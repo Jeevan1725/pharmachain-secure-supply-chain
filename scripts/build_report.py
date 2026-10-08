@@ -54,7 +54,6 @@ def style_table(table, header=True, zebra=True):
 
 
 def add_figure(doc, filename, caption):
-    """Embed a PNG from diagrams/ with a centered italic caption."""
     img_path = os.path.abspath(
         os.path.join(os.path.dirname(__file__), "..", "diagrams", filename)
     )
@@ -585,7 +584,6 @@ def add_phase_3(doc):
         "supporting roles) and 10 major use cases with include/extend "
         "relationships that enforce security invariants."
     )
-
     add_figure(doc, "03-usecase.png",
                "Figure 3.1 - PharmaChain Use Case Diagram")
 
@@ -773,6 +771,7 @@ def add_phase_3(doc):
     style_table(t)
 
     doc.add_page_break()
+
 
 # ---------- Phase 4 ----------
 
@@ -1005,7 +1004,7 @@ def add_phase_6(doc):
         ("Feedback", "Inline validation, inline errors, disabled button until valid"),
         ("Error Handling", "Generic error messages (no user enumeration), lockout after 5 fails"),
         ("Security", "TLS 1.3, mTLS option, MFA required, rate limiting"),
-        ("Golden Rules", "Consistency (all orgs see same layout), Error prevention (required fields), Visibility (trust badges)"),
+        ("Golden Rules", "Consistency, Error prevention, Visibility"),
     ]
     for r in login_rows:
         cells = t.add_row().cells
@@ -1028,7 +1027,7 @@ def add_phase_6(doc):
         ("Feedback", "KPI cards show today's stats; inline uniqueness check on serial"),
         ("Error Handling", "Duplicate serial -> inline warning; HSM signature failure -> retry + alert"),
         ("Security", "Auto-generated serial (no tampering), signed submission, RBAC enforced"),
-        ("Golden Rules", "Feedback (real-time), Consistency (same form layout), Visibility (status badges)"),
+        ("Golden Rules", "Feedback, Consistency, Visibility"),
     ]
     for r in prod_rows:
         cells = t.add_row().cells
@@ -1051,7 +1050,7 @@ def add_phase_6(doc):
         ("Feedback", "Live timeline, temperature chip, progress bar, hash verification"),
         ("Error Handling", "Unknown ID -> 'not found, verify'; hash mismatch -> red alert + audit log"),
         ("Security", "Read-only for non-owners; actions require signature; nonce check"),
-        ("Golden Rules", "Navigation (breadcrumbs), User control (cancel/back), Consistency (colors)"),
+        ("Golden Rules", "Navigation, User control, Consistency"),
     ]
     for r in ship_rows:
         cells = t.add_row().cells
@@ -1074,7 +1073,7 @@ def add_phase_6(doc):
         ("Feedback", "Chain integrity KPI, per-row Valid/Invalid badges, glowing verify dots"),
         ("Error Handling", "Hash mismatch -> red 'Invalid' badge + alert to Security Officer"),
         ("Security", "Read-only view, signed export to PDF, 7-year retention"),
-        ("Golden Rules", "Consistency (same layout), Visibility (chain status), Error prevention (no edit controls)"),
+        ("Golden Rules", "Consistency, Visibility, Error prevention"),
     ]
     for r in aud_rows:
         cells = t.add_row().cells
@@ -1093,6 +1092,8 @@ def add_phase_6(doc):
         doc.add_paragraph(b, style="List Bullet")
 
     doc.add_page_break()
+
+
 # ---------- Phase 7 ----------
 
 def add_phase_7(doc):
@@ -1143,28 +1144,17 @@ def add_phase_7(doc):
     hdr[3].text = "STRIDE"
     hdr[4].text = "Impact / Mitigation"
     threats = [
-        ("T1", "API Gateway (TB1)", "Credential stuffing",
-         "S / Account takeover / MFA + rate limit + CAPTCHA"),
-        ("T2", "Product DB (D1)", "Serial tampering",
-         "T / Fake products / SHA-256 + signature"),
-        ("T3", "Ownership Service (P4)", "Repudiation of transfer",
-         "R / Disputed ownership / Digital signature + ledger"),
-        ("T4", "Audit Log (D5)", "Information disclosure",
-         "I / Privacy leak / Encryption at rest + RBAC"),
-        ("T5", "Shipment API (P2)", "Denial of Service",
-         "D / Supply chain halt / Rate limit + WAF + autoscale"),
-        ("T6", "Admin console (P6)", "Privilege escalation",
-         "E / Full compromise / Least privilege + MFA"),
-        ("T7", "Kafka topic", "Message injection",
-         "T / Fake shipment / mTLS + schema validation + signing"),
-        ("T8", "Ledger write (D5)", "Replay attack",
-         "T / Duplicate transfers / Nonce + timestamp + idempotency"),
-        ("T9", "Customer portal", "PII scraping",
-         "I / GDPR breach / Rate limit + auth + field encryption"),
-        ("T10", "Service mesh", "MITM between microservices",
-         "S/T / Data theft / mTLS between every call"),
-        ("T11", "QR code on product", "Forgery of QR",
-         "S / Fake receipt / Signed QR (PKI) verified server-side"),
+        ("T1", "API Gateway (TB1)", "Credential stuffing", "S / Account takeover / MFA + rate limit + CAPTCHA"),
+        ("T2", "Product DB (D1)", "Serial tampering", "T / Fake products / SHA-256 + signature"),
+        ("T3", "Ownership Service (P4)", "Repudiation of transfer", "R / Disputed ownership / Digital signature + ledger"),
+        ("T4", "Audit Log (D5)", "Information disclosure", "I / Privacy leak / Encryption at rest + RBAC"),
+        ("T5", "Shipment API (P2)", "Denial of Service", "D / Supply chain halt / Rate limit + WAF + autoscale"),
+        ("T6", "Admin console (P6)", "Privilege escalation", "E / Full compromise / Least privilege + MFA"),
+        ("T7", "Kafka topic", "Message injection", "T / Fake shipment / mTLS + schema validation + signing"),
+        ("T8", "Ledger write (D5)", "Replay attack", "T / Duplicate transfers / Nonce + timestamp + idempotency"),
+        ("T9", "Customer portal", "PII scraping", "I / GDPR breach / Rate limit + auth + field encryption"),
+        ("T10", "Service mesh", "MITM between microservices", "S/T / Data theft / mTLS between every call"),
+        ("T11", "QR code on product", "Forgery of QR", "S / Fake receipt / Signed QR (PKI) verified server-side"),
     ]
     for r in threats:
         cells = t.add_row().cells
@@ -1242,18 +1232,12 @@ def add_phase_7(doc):
     hdr[3].text = "Impact"
     hdr[4].text = "Mitigation"
     vulns = [
-        ("V1", "Login API", "T1 (credential stuffing)",
-         "Account takeover", "MFA + lockout + CAPTCHA + IP throttle"),
-        ("V2", "QR verification", "T11 (QR forgery)",
-         "Fake receipt accepted", "Server-side signature verification, never trust QR alone"),
-        ("V3", "Ledger SDK", "T8 (replay)",
-         "Duplicate transfers", "Nonce + timestamp + idempotency key"),
-        ("V4", "Kafka topic", "T7 (injection)",
-         "Fake shipments", "Schema validation + message signing + mTLS"),
-        ("V5", "Admin API", "T6 (IDOR)",
-         "Unauthorized access", "ABAC check per org, UUIDv4 IDs, schema validation"),
-        ("V6", "Blob storage", "T4 (misconfig)",
-         "Data leak", "Private buckets + signed URLs + audit access logs"),
+        ("V1", "Login API", "T1 (credential stuffing)", "Account takeover", "MFA + lockout + CAPTCHA + IP throttle"),
+        ("V2", "QR verification", "T11 (QR forgery)", "Fake receipt accepted", "Server-side signature verification"),
+        ("V3", "Ledger SDK", "T8 (replay)", "Duplicate transfers", "Nonce + timestamp + idempotency key"),
+        ("V4", "Kafka topic", "T7 (injection)", "Fake shipments", "Schema validation + message signing + mTLS"),
+        ("V5", "Admin API", "T6 (IDOR)", "Unauthorized access", "ABAC check per org, UUIDv4 IDs"),
+        ("V6", "Blob storage", "T4 (misconfig)", "Data leak", "Private buckets + signed URLs + audit logs"),
     ]
     for r in vulns:
         cells = t.add_row().cells
@@ -1295,27 +1279,13 @@ def add_phase_8(doc):
     hdr[2].text = "Preventive Control"
     hdr[3].text = "Detective Control"
     paths = [
-        ("A1", "Steal Distributor's private key",
-         "HSM-backed keys (no export), MFA",
-         "Anomaly alert on unusual login IP/time"),
-        ("A1a", "Compromise HSM",
-         "FIPS 140-2 L3, tamper-responsive",
-         "HSM audit logs + physical monitoring"),
-        ("A1c", "Phish employee",
-         "Email filtering, awareness training",
-         "SIEM correlation of suspicious events"),
-        ("A2", "Exploit API authorization bug",
-         "ABAC per org, UUIDv4 IDs",
-         "API access log review"),
-        ("A2a", "Guess product ID",
-         "UUIDv4 (122 bits entropy)",
-         "Rate limit on 404s"),
-        ("A3", "Replay old signed transfer",
-         "Nonce + timestamp + idempotency",
-         "Ledger duplicate detection"),
-        ("A4", "Insider at Ledger Service",
-         "Dual-control, segregation of duties",
-         "Peer review + immutable audit log"),
+        ("A1", "Steal Distributor's private key", "HSM-backed keys (no export), MFA", "Anomaly alert on unusual login IP/time"),
+        ("A1a", "Compromise HSM", "FIPS 140-2 L3, tamper-responsive", "HSM audit logs + physical monitoring"),
+        ("A1c", "Phish employee", "Email filtering, awareness training", "SIEM correlation of suspicious events"),
+        ("A2", "Exploit API authorization bug", "ABAC per org, UUIDv4 IDs", "API access log review"),
+        ("A2a", "Guess product ID", "UUIDv4 (122 bits entropy)", "Rate limit on 404s"),
+        ("A3", "Replay old signed transfer", "Nonce + timestamp + idempotency", "Ledger duplicate detection"),
+        ("A4", "Insider at Ledger Service", "Dual-control, segregation of duties", "Peer review + immutable audit log"),
     ]
     for r in paths:
         cells = t.add_row().cells
@@ -1346,12 +1316,9 @@ def add_phase_8(doc):
     hdr[1].text = "Risk"
     hdr[2].text = "Control Status"
     risks = [
-        ("1", "Private key theft -> fraudulent transfer",
-         "Controlled: HSM + MFA + rotation + anomaly alerts"),
-        ("2", "Replay of signed transfer",
-         "Controlled: nonce + timestamp + idempotency"),
-        ("3", "Insider at Ledger Service",
-         "Controlled: dual-control + segregation + immutable audit"),
+        ("1", "Private key theft -> fraudulent transfer", "Controlled: HSM + MFA + rotation + anomaly alerts"),
+        ("2", "Replay of signed transfer", "Controlled: nonce + timestamp + idempotency"),
+        ("3", "Insider at Ledger Service", "Controlled: dual-control + segregation + immutable audit"),
     ]
     for r in risks:
         cells = t.add_row().cells
@@ -1369,10 +1336,29 @@ def add_phase_8(doc):
 
     doc.add_page_break()
 
-    # ---------- Phase 9 ----------
+
+# ---------- Phase 9 ----------
 
 def add_phase_9(doc):
     h1(doc, "Phase 9 - Product Backlog and Jira/Scrum")
+
+    doc.add_paragraph(
+        "The PharmaChain backlog was managed in a live Jira Cloud Scrum project "
+        "(site: j33v4n.atlassian.net, project key: SCMSEC). The backlog, sprint "
+        "boards, and burndown charts below are direct screenshots from Jira."
+    )
+
+    h2(doc, "9.0 Live Jira Backlog (Evidence)")
+    add_figure(doc, "01-backlog.png",
+               "Figure 9.1 - Jira backlog showing 5 epics, 12 stories, 2 sprints")
+
+    doc.add_paragraph()
+    doc.add_paragraph(
+        "The Timeline view below shows story start/due dates and the "
+        "dependency arrows between blocked and blocking stories."
+    )
+    add_figure(doc, "05-timeline.png",
+               "Figure 9.2 - Jira Timeline view with dependencies")
 
     h2(doc, "9.1 Epics")
     t = doc.add_table(rows=1, cols=2)
@@ -1381,11 +1367,11 @@ def add_phase_9(doc):
     hdr[0].text = "Epic"
     hdr[1].text = "Description"
     epics = [
-        ("E1", "Identity & Access - PKI, MFA, RBAC, ABAC"),
-        ("E2", "Product Lifecycle - registration, serialization, lookup"),
-        ("E3", "Shipment & Logistics - shipments, receipts, deliveries"),
-        ("E4", "Ownership & Ledger - signed transfers, hash chain"),
-        ("E5", "Audit & Compliance - immutable log, anomaly detection, reporting"),
+        ("E1 (SCMSEC-1)", "Identity & Access - PKI, MFA, RBAC, ABAC"),
+        ("E2 (SCMSEC-2)", "Product Lifecycle - registration, serialization, lookup"),
+        ("E3 (SCMSEC-3)", "Shipment & Logistics - shipments, receipts, deliveries"),
+        ("E4 (SCMSEC-4)", "Ownership & Ledger - signed transfers, hash chain"),
+        ("E5 (SCMSEC-5)", "Audit & Compliance - immutable log, anomaly detection, reporting"),
     ]
     for r in epics:
         cells = t.add_row().cells
@@ -1406,54 +1392,18 @@ def add_phase_9(doc):
     hdr[3].text = "Priority"
     hdr[4].text = "Acceptance Criteria"
     stories = [
-        ("US-01", "E1",
-         "As a Manufacturer, I want to register with PKI so that my identity is trusted",
-         "High",
-         "Certificate issued; mTLS works"),
-        ("US-02", "E1",
-         "As an Admin, I want to onboard an org so that it can join the network",
-         "High",
-         "Org has keys and RBAC roles"),
-        ("US-03", "E1",
-         "As a User, I want MFA so that my account is protected",
-         "High",
-         "TOTP required; recovery codes"),
-        ("US-04", "E2",
-         "As a Manufacturer, I want to register a product with a unique serial so it is traceable",
-         "High",
-         "Duplicate serial rejected; ledger entry"),
-        ("US-05", "E2",
-         "As a Customer, I want to verify product authenticity so I trust my purchase",
-         "High",
-         "Signed query returns valid/invalid"),
-        ("US-06", "E3",
-         "As a Distributor, I want to create a shipment so goods move",
-         "High",
-         "Shipment ID + signed record"),
-        ("US-07", "E3",
-         "As a Warehouse, I want to confirm receipt so chain of custody continues",
-         "High",
-         "Seal hash verified; audit logged"),
-        ("US-08", "E3",
-         "As a Retailer, I want to confirm delivery so the sale is complete",
-         "High",
-         "Delivery record + notification"),
-        ("US-09", "E4",
-         "As a Distributor, I want to transfer ownership so legal title moves",
-         "High",
-         "Signature verified; ledger updated"),
-        ("US-10", "E5",
-         "As an Auditor, I want to view immutable audit logs so I can investigate",
-         "High",
-         "Read-only; hash verified"),
-        ("US-11", "E5",
-         "As a Security Officer, I want anomaly alerts so fraud is detected",
-         "Medium",
-         "Alert on duplicate/odd transfer"),
-        ("US-12", "E3",
-         "As a Distributor, I want real-time status so I can plan logistics",
-         "Medium",
-         "Status < 1s; push notifications"),
+        ("SCMSEC-6",  "E1", "As a Manufacturer, I want to register with PKI so that my identity is trusted", "High", "Certificate issued; mTLS works"),
+        ("SCMSEC-7",  "E1", "As an Admin, I want to onboard an org so that it can join the network", "High", "Org has keys and RBAC roles"),
+        ("SCMSEC-8",  "E1", "As a User, I want MFA so that my account is protected", "High", "TOTP required; recovery codes"),
+        ("SCMSEC-9",  "E2", "As a Manufacturer, I want to register a product with a unique serial so it is traceable", "High", "Duplicate serial rejected; ledger entry"),
+        ("SCMSEC-10", "E2", "As a Customer, I want to verify product authenticity so I trust my purchase", "High", "Signed query returns valid/invalid"),
+        ("SCMSEC-11", "E3", "As a Distributor, I want to create a shipment so goods move", "High", "Shipment ID + signed record"),
+        ("SCMSEC-12", "E3", "As a Warehouse, I want to confirm receipt so chain of custody continues", "High", "Seal hash verified; audit logged"),
+        ("SCMSEC-13", "E3", "As a Retailer, I want to confirm delivery so the sale is complete", "High", "Delivery record + notification"),
+        ("SCMSEC-14", "E4", "As a Distributor, I want to transfer ownership so legal title moves", "High", "Signature verified; ledger updated"),
+        ("SCMSEC-15", "E5", "As an Auditor, I want to view immutable audit logs so I can investigate", "High", "Read-only; hash verified"),
+        ("SCMSEC-16", "E5", "As a Security Officer, I want anomaly alerts so fraud is detected", "Medium", "Alert on duplicate/odd transfer"),
+        ("SCMSEC-17", "E3", "As a Distributor, I want real-time status so I can plan logistics", "Medium", "Status < 1s; push notifications"),
     ]
     for r in stories:
         cells = t.add_row().cells
@@ -1463,29 +1413,32 @@ def add_phase_9(doc):
 
     h2(doc, "9.3 Jira Scrum Project Setup")
     for b in [
-        "Project key: SCM-SEC",
+        "Jira Cloud site: j33v4n.atlassian.net",
+        "Project key: SCMSEC",
         "Board type: Scrum",
-        "Epics: E1..E5",
-        "Stories: US-01..US-12",
-        "Tasks per story: design, code, test, security review",
+        "Epics: SCMSEC-1 .. SCMSEC-5",
+        "Stories: SCMSEC-6 .. SCMSEC-17",
         "Workflow: TO DO -> IN PROGRESS -> TESTING -> DONE",
     ]:
         doc.add_paragraph(b, style="List Bullet")
 
     h2(doc, "9.4 Sprint Plan")
-    t = doc.add_table(rows=1, cols=3)
+    t = doc.add_table(rows=1, cols=4)
     t.style = "Table Grid"
     hdr = t.rows[0].cells
     hdr[0].text = "Sprint"
     hdr[1].text = "Sprint Goal"
     hdr[2].text = "Stories"
+    hdr[3].text = "Duration"
     sprints = [
-        ("Sprint 1 (2 weeks)",
+        ("Sprint 1 - Secure Foundation",
          "Secure Foundation - Identity, Product, Audit",
-         "US-01, US-02, US-03, US-04, US-10"),
-        ("Sprint 2 (2 weeks)",
+         "SCMSEC-6, 7, 8, 9, 15",
+         "2 weeks"),
+        ("Sprint 2 - Logistics",
          "Logistics and Ownership - Shipments, Receipts, Transfers, Anomaly",
-         "US-05, US-06, US-07, US-08, US-09, US-11, US-12"),
+         "SCMSEC-10..14, 16, 17",
+         "2 weeks"),
     ]
     for r in sprints:
         cells = t.add_row().cells
@@ -1501,7 +1454,27 @@ def add_phase_9(doc):
 def add_phase_10(doc):
     h1(doc, "Phase 10 - Sprint Execution and Scrum Metrics")
 
-    h2(doc, "10.1 Sprint Board (Sprint 2)")
+    h2(doc, "10.1 Sprint Board at Start (Jira Evidence)")
+    doc.add_paragraph(
+        "Sprint 1 - Secure Foundation was started in Jira. The board below is "
+        "a live screenshot from the Jira Cloud site."
+    )
+    add_figure(doc, "02-sprint1-board.png",
+               "Figure 10.1 - Sprint 1 board at sprint start (TO DO / IN PROGRESS / DONE)")
+
+    h2(doc, "10.2 Board With Progress (Day 3)")
+    doc.add_paragraph(
+        "After three days of execution, several stories have been moved "
+        "through IN PROGRESS, TESTING, and DONE."
+    )
+    add_figure(doc, "03-board-progress.png",
+               "Figure 10.2 - Sprint 1 board with in-flight and completed stories")
+
+    h2(doc, "10.3 Burndown Chart")
+    add_figure(doc, "04-burndown.png",
+               "Figure 10.3 - Sprint burndown chart from Jira")
+
+    h2(doc, "10.4 Sprint Board Snapshot (tabular)")
     t = doc.add_table(rows=1, cols=4)
     t.style = "Table Grid"
     hdr = t.rows[0].cells
@@ -1510,8 +1483,7 @@ def add_phase_10(doc):
     hdr[2].text = "TESTING"
     hdr[3].text = "DONE"
     board = [
-        ("US-12", "US-08", "US-07", "US-05, US-06"),
-        ("-", "-", "US-11", "-"),
+        ("SCMSEC-17", "SCMSEC-9", "SCMSEC-15", "SCMSEC-6, SCMSEC-7, SCMSEC-8"),
     ]
     for r in board:
         cells = t.add_row().cells
@@ -1519,7 +1491,7 @@ def add_phase_10(doc):
             cells[i].text = val
     style_table(t)
 
-    h2(doc, "10.2 Daily Scrum Entry (Day 3)")
+    h2(doc, "10.5 Daily Scrum Entry (Day 3)")
     t = doc.add_table(rows=1, cols=4)
     t.style = "Table Grid"
     hdr = t.rows[0].cells
@@ -1528,10 +1500,10 @@ def add_phase_10(doc):
     hdr[2].text = "Today"
     hdr[3].text = "Blockers"
     daily = [
-        ("Dev A", "Finished US-06", "Start US-07", "None"),
-        ("Dev B", "US-09 signature logic", "Unit tests for US-09", "HSM access pending"),
-        ("QA", "Test plan for US-05", "Execute US-05 tests", "None"),
-        ("Security", "Threat review US-09", "STRIDE recheck", "None"),
+        ("Dev A", "Finished SCMSEC-8", "Start SCMSEC-9", "None"),
+        ("Dev B", "SCMSEC-14 signature logic", "Unit tests for SCMSEC-14", "HSM access pending"),
+        ("QA", "Test plan for SCMSEC-6", "Execute SCMSEC-6 tests", "None"),
+        ("Security", "Threat review SCMSEC-14", "STRIDE recheck", "None"),
     ]
     for r in daily:
         cells = t.add_row().cells
@@ -1539,11 +1511,7 @@ def add_phase_10(doc):
             cells[i].text = val
     style_table(t)
 
-    h2(doc, "10.3 Sprint Burndown Chart")
-    doc.add_paragraph(
-        "Sprint 2 started with 20 story points. The actual line tracks the "
-        "ideal line with a slight under-burn that resulted in a 2 SP carry-over."
-    )
+    h2(doc, "10.6 Sprint Burndown Data")
     t = doc.add_table(rows=1, cols=3)
     t.style = "Table Grid"
     hdr = t.rows[0].cells
@@ -1556,7 +1524,7 @@ def add_phase_10(doc):
         ("4", "12", "13"),
         ("6", "8", "9"),
         ("8", "4", "5"),
-        ("10", "0", "2 (carry-over US-12)"),
+        ("10", "0", "2 (carry-over SCMSEC-17)"),
     ]
     for r in burndown:
         cells = t.add_row().cells
@@ -1564,7 +1532,7 @@ def add_phase_10(doc):
             cells[i].text = val
     style_table(t)
 
-    h2(doc, "10.4 Scrum Metrics")
+    h2(doc, "10.7 Scrum Metrics")
     t = doc.add_table(rows=1, cols=2)
     t.style = "Table Grid"
     hdr = t.rows[0].cells
@@ -1578,14 +1546,14 @@ def add_phase_10(doc):
         ("Defects fixed", "3"),
         ("Defects carried over", "1 (Low)"),
         ("Stories completed", "11 of 12"),
-        ("Carry-over", "US-12 (real-time status)"),
+        ("Carry-over", "SCMSEC-17 (real-time status)"),
     ]
     for r in metrics:
         cells = t.add_row().cells
         cells[0].text, cells[1].text = r[0], r[1]
     style_table(t)
 
-    h2(doc, "10.5 Defect Log")
+    h2(doc, "10.8 Defect Log")
     t = doc.add_table(rows=1, cols=5)
     t.style = "Table Grid"
     hdr = t.rows[0].cells
@@ -1606,7 +1574,7 @@ def add_phase_10(doc):
             cells[i].text = val
     style_table(t)
 
-    h2(doc, "10.6 Sprint Review Outcome")
+    h2(doc, "10.9 Sprint Review Outcome")
     doc.add_paragraph(
         "Stakeholders (Manufacturer, Distributor, Auditor) accepted 11 stories. "
         "The team demonstrated end-to-end flow: product registration -> shipment "
@@ -1617,19 +1585,16 @@ def add_phase_10(doc):
         "This was added to the Sprint 3 backlog."
     )
 
-    h2(doc, "10.7 Sprint Retrospective")
+    h2(doc, "10.10 Sprint Retrospective")
     t = doc.add_table(rows=1, cols=2)
     t.style = "Table Grid"
     hdr = t.rows[0].cells
     hdr[0].text = "What Went Well"
     hdr[1].text = "What To Improve"
     retro = [
-        ("Cross-org daily scrums surfaced blockers early",
-         "Add HSM access earlier in the sprint"),
-        ("Security review as part of Definition of Done caught replay bug",
-         "Pair-program security-critical stories (US-09)"),
-        ("Velocity stable at 18 SP across both sprints",
-         "Refine carry-over estimation"),
+        ("Cross-org daily scrums surfaced blockers early", "Add HSM access earlier in the sprint"),
+        ("Security review as part of Definition of Done caught replay bug", "Pair-program security-critical stories (SCMSEC-14)"),
+        ("Velocity stable at 18 SP across both sprints", "Refine carry-over estimation"),
     ]
     for r in retro:
         cells = t.add_row().cells
@@ -1644,6 +1609,8 @@ def add_phase_10(doc):
         doc.add_paragraph(b, style="List Bullet")
 
     doc.add_page_break()
+
+
 # ---------- main ----------
 
 def main():
@@ -1670,11 +1637,10 @@ def main():
     add_phase_9(doc)
     add_phase_10(doc)
     # Future phases appended here.
+
     doc.save(DOC_PATH)
     print(f"[OK] Styled report written to: {DOC_PATH}")
 
 
 if __name__ == "__main__":
     main()
-
-
