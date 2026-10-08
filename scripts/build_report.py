@@ -1093,7 +1093,281 @@ def add_phase_6(doc):
         doc.add_paragraph(b, style="List Bullet")
 
     doc.add_page_break()
+# ---------- Phase 7 ----------
 
+def add_phase_7(doc):
+    h1(doc, "Phase 7 - Threat Modeling and Security Analysis")
+
+    h2(doc, "7.1 Assets and CIA Classification")
+    doc.add_paragraph(
+        "Nine critical assets were identified across the PharmaChain system. "
+        "Each is classified by Confidentiality (C), Integrity (I), and "
+        "Availability (A) requirements."
+    )
+    t = doc.add_table(rows=1, cols=5)
+    t.style = "Table Grid"
+    hdr = t.rows[0].cells
+    hdr[0].text = "#"
+    hdr[1].text = "Asset"
+    hdr[2].text = "C"
+    hdr[3].text = "I"
+    hdr[4].text = "A"
+    assets = [
+        ("1", "Product records (serials, batch)", "Yes", "Yes", "Yes"),
+        ("2", "Ownership transfer records", "Yes", "Yes", "Yes"),
+        ("3", "Shipment data", "Yes", "Yes", "Yes"),
+        ("4", "Customer PII (delivery addresses)", "Yes", "Yes", "No"),
+        ("5", "Digital signing keys", "Yes", "Yes", "Yes"),
+        ("6", "Audit log / ledger", "No", "Yes", "Yes"),
+        ("7", "Authentication credentials", "Yes", "Yes", "No"),
+        ("8", "Pricing & contract data", "Yes", "Yes", "No"),
+        ("9", "Ledger integrity (hash chain)", "No", "Yes", "Yes"),
+    ]
+    for r in assets:
+        cells = t.add_row().cells
+        for i, val in enumerate(r):
+            cells[i].text = val
+    style_table(t)
+
+    h2(doc, "7.2 STRIDE Threat Analysis")
+    doc.add_paragraph(
+        "STRIDE was applied to each element of the Level-1 DFD. Eleven threats "
+        "were identified, along with mitigations and residual risk."
+    )
+    t = doc.add_table(rows=1, cols=5)
+    t.style = "Table Grid"
+    hdr = t.rows[0].cells
+    hdr[0].text = "#"
+    hdr[1].text = "DFD Element"
+    hdr[2].text = "Threat"
+    hdr[3].text = "STRIDE"
+    hdr[4].text = "Impact / Mitigation"
+    threats = [
+        ("T1", "API Gateway (TB1)", "Credential stuffing",
+         "S / Account takeover / MFA + rate limit + CAPTCHA"),
+        ("T2", "Product DB (D1)", "Serial tampering",
+         "T / Fake products / SHA-256 + signature"),
+        ("T3", "Ownership Service (P4)", "Repudiation of transfer",
+         "R / Disputed ownership / Digital signature + ledger"),
+        ("T4", "Audit Log (D5)", "Information disclosure",
+         "I / Privacy leak / Encryption at rest + RBAC"),
+        ("T5", "Shipment API (P2)", "Denial of Service",
+         "D / Supply chain halt / Rate limit + WAF + autoscale"),
+        ("T6", "Admin console (P6)", "Privilege escalation",
+         "E / Full compromise / Least privilege + MFA"),
+        ("T7", "Kafka topic", "Message injection",
+         "T / Fake shipment / mTLS + schema validation + signing"),
+        ("T8", "Ledger write (D5)", "Replay attack",
+         "T / Duplicate transfers / Nonce + timestamp + idempotency"),
+        ("T9", "Customer portal", "PII scraping",
+         "I / GDPR breach / Rate limit + auth + field encryption"),
+        ("T10", "Service mesh", "MITM between microservices",
+         "S/T / Data theft / mTLS between every call"),
+        ("T11", "QR code on product", "Forgery of QR",
+         "S / Fake receipt / Signed QR (PKI) verified server-side"),
+    ]
+    for r in threats:
+        cells = t.add_row().cells
+        for i, val in enumerate(r):
+            cells[i].text = val
+    style_table(t)
+
+    h2(doc, "7.3 Information Flow Analysis")
+    doc.add_paragraph(
+        "Three sensitive assets were traced from source to destination, with "
+        "the controls enforced at every hop."
+    )
+
+    h3(doc, "Asset 1 - Ownership Record")
+    t = doc.add_table(rows=1, cols=2)
+    t.style = "Table Grid"
+    hdr = t.rows[0].cells
+    hdr[0].text = "Flow Step"
+    hdr[1].text = "Control"
+    for r in [
+        ("Source: Distributor app", "Signed with HSM-backed private key"),
+        ("In transit: Distributor -> API Gateway", "TLS 1.3 + mTLS certificate"),
+        ("API Gateway -> Ownership Service", "JWT validation, RBAC + ABAC"),
+        ("Ownership Service -> Ledger", "Hash-chained write, signature stored"),
+        ("Ledger -> Audit Service", "Read-only path, no write access"),
+    ]:
+        cells = t.add_row().cells
+        cells[0].text, cells[1].text = r[0], r[1]
+    style_table(t)
+
+    h3(doc, "Asset 2 - Customer PII")
+    t = doc.add_table(rows=1, cols=2)
+    t.style = "Table Grid"
+    hdr = t.rows[0].cells
+    hdr[0].text = "Flow Step"
+    hdr[1].text = "Control"
+    for r in [
+        ("Customer -> Portal", "TLS 1.3, token-based session"),
+        ("Portal -> Delivery Service", "Field-level encryption (AES-256)"),
+        ("Delivery Service -> PostgreSQL", "Encrypted at rest, column-level encryption"),
+        ("Delivery Service -> Notification", "Masked PII, role-limited access"),
+    ]:
+        cells = t.add_row().cells
+        cells[0].text, cells[1].text = r[0], r[1]
+    style_table(t)
+
+    h3(doc, "Asset 3 - Signing Keys")
+    t = doc.add_table(rows=1, cols=2)
+    t.style = "Table Grid"
+    hdr = t.rows[0].cells
+    hdr[0].text = "Flow Step"
+    hdr[1].text = "Control"
+    for r in [
+        ("Generation", "Inside HSM, never exported"),
+        ("Storage", "HSM with FIPS 140-2 Level 3"),
+        ("Usage", "Short-lived session tokens only"),
+        ("Rotation", "Every 90 days, dual-control"),
+        ("Revocation", "Immediate, propagated to KeyStore"),
+    ]:
+        cells = t.add_row().cells
+        cells[0].text, cells[1].text = r[0], r[1]
+    style_table(t)
+
+    h2(doc, "7.4 Vulnerability Analysis")
+    doc.add_paragraph(
+        "Six high-impact vulnerabilities were identified from the threat "
+        "analysis. Each maps to a threat and has a specific mitigation."
+    )
+    t = doc.add_table(rows=1, cols=5)
+    t.style = "Table Grid"
+    hdr = t.rows[0].cells
+    hdr[0].text = "#"
+    hdr[1].text = "Element"
+    hdr[2].text = "Threat"
+    hdr[3].text = "Impact"
+    hdr[4].text = "Mitigation"
+    vulns = [
+        ("V1", "Login API", "T1 (credential stuffing)",
+         "Account takeover", "MFA + lockout + CAPTCHA + IP throttle"),
+        ("V2", "QR verification", "T11 (QR forgery)",
+         "Fake receipt accepted", "Server-side signature verification, never trust QR alone"),
+        ("V3", "Ledger SDK", "T8 (replay)",
+         "Duplicate transfers", "Nonce + timestamp + idempotency key"),
+        ("V4", "Kafka topic", "T7 (injection)",
+         "Fake shipments", "Schema validation + message signing + mTLS"),
+        ("V5", "Admin API", "T6 (IDOR)",
+         "Unauthorized access", "ABAC check per org, UUIDv4 IDs, schema validation"),
+        ("V6", "Blob storage", "T4 (misconfig)",
+         "Data leak", "Private buckets + signed URLs + audit access logs"),
+    ]
+    for r in vulns:
+        cells = t.add_row().cells
+        for i, val in enumerate(r):
+            cells[i].text = val
+    style_table(t)
+
+    h2(doc, "7.5 Residual Risk Summary")
+    doc.add_paragraph(
+        "After applying the mitigations above, the highest residual risks are: "
+        "(1) insider threat at the Ledger Service - mitigated by dual-control "
+        "and segregation of duties; (2) quantum-computing attack on RSA keys - "
+        "deferred to future work with post-quantum migration roadmap."
+    )
+
+    doc.add_page_break()
+
+
+# ---------- Phase 8 ----------
+
+def add_phase_8(doc):
+    h1(doc, "Phase 8 - Attack Tree and Security Architecture Refinement")
+
+    h2(doc, "8.1 Attack Tree")
+    doc.add_paragraph(
+        "Critical attacker goal: fraudulently transfer ownership of another "
+        "organization's product. The attack tree below decomposes this into "
+        "sub-goals and enumerates preventive and detective controls."
+    )
+    add_figure(doc, "08-attack-tree.png",
+               "Figure 8.1 - Attack Tree: Fraudulent Ownership Transfer")
+
+    h2(doc, "8.2 Attack Paths and Controls")
+    t = doc.add_table(rows=1, cols=4)
+    t.style = "Table Grid"
+    hdr = t.rows[0].cells
+    hdr[0].text = "Path"
+    hdr[1].text = "Sub-goal"
+    hdr[2].text = "Preventive Control"
+    hdr[3].text = "Detective Control"
+    paths = [
+        ("A1", "Steal Distributor's private key",
+         "HSM-backed keys (no export), MFA",
+         "Anomaly alert on unusual login IP/time"),
+        ("A1a", "Compromise HSM",
+         "FIPS 140-2 L3, tamper-responsive",
+         "HSM audit logs + physical monitoring"),
+        ("A1c", "Phish employee",
+         "Email filtering, awareness training",
+         "SIEM correlation of suspicious events"),
+        ("A2", "Exploit API authorization bug",
+         "ABAC per org, UUIDv4 IDs",
+         "API access log review"),
+        ("A2a", "Guess product ID",
+         "UUIDv4 (122 bits entropy)",
+         "Rate limit on 404s"),
+        ("A3", "Replay old signed transfer",
+         "Nonce + timestamp + idempotency",
+         "Ledger duplicate detection"),
+        ("A4", "Insider at Ledger Service",
+         "Dual-control, segregation of duties",
+         "Peer review + immutable audit log"),
+    ]
+    for r in paths:
+        cells = t.add_row().cells
+        for i, val in enumerate(r):
+            cells[i].text = val
+    style_table(t)
+
+    h2(doc, "8.3 Security Architecture Refinement")
+    doc.add_paragraph(
+        "The following controls were added to the architecture in Phase 5 as "
+        "a direct result of this attack tree analysis:"
+    )
+    for b in [
+        "HSM-backed signing service (was: soft keys)",
+        "Nonce + timestamp validation at API Gateway (was: no replay defense)",
+        "Dual-approval workflow for high-value transfers (was: single signer)",
+        "SIEM with anomaly rules (was: manual log review)",
+        "Signed QR codes verified server-side (was: trust QR contents)",
+        "Automatic key rotation every 90 days (was: manual ad-hoc)",
+    ]:
+        doc.add_paragraph(b, style="List Bullet")
+
+    h2(doc, "8.4 Highest-Risk Issues After Refinement")
+    t = doc.add_table(rows=1, cols=3)
+    t.style = "Table Grid"
+    hdr = t.rows[0].cells
+    hdr[0].text = "Rank"
+    hdr[1].text = "Risk"
+    hdr[2].text = "Control Status"
+    risks = [
+        ("1", "Private key theft -> fraudulent transfer",
+         "Controlled: HSM + MFA + rotation + anomaly alerts"),
+        ("2", "Replay of signed transfer",
+         "Controlled: nonce + timestamp + idempotency"),
+        ("3", "Insider at Ledger Service",
+         "Controlled: dual-control + segregation + immutable audit"),
+    ]
+    for r in risks:
+        cells = t.add_row().cells
+        for i, val in enumerate(r):
+            cells[i].text = val
+    style_table(t)
+
+    h2(doc, "8.5 Traceability Thread (SR-03)")
+    doc.add_paragraph(
+        "SR-03 (every ownership transfer must be digitally signed, "
+        "hash-chained, and audit-logged) maps directly to attack path A3 "
+        "(Replay) which is mitigated by nonce + timestamp + hash chain. "
+        "This closes the thread from requirement -> attack -> control."
+    )
+
+    doc.add_page_break()
 # ---------- main ----------
 
 def main():
@@ -1115,7 +1389,8 @@ def main():
     add_phase_4(doc)
     add_phase_5(doc)
     add_phase_6(doc)
-    # Future phases appended here.
+    add_phase_7(doc)
+    add_phase_8(doc)
     # Future phases appended here.
 
     doc.save(DOC_PATH)
@@ -1124,3 +1399,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
