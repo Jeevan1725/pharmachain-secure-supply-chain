@@ -1,0 +1,95 @@
+﻿@startuml
+!theme plain
+left to right direction
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Calibri
+skinparam defaultFontSize 11
+skinparam nodesep 22
+skinparam ranksep 40
+skinparam linetype ortho
+skinparam shadowing false
+
+skinparam actor {
+  BackgroundColor #FFF9C4
+  BorderColor #F57F17
+  BorderThickness 1.5
+}
+skinparam usecase {
+  BackgroundColor #E3F2FD
+  BorderColor #1565C0
+  BorderThickness 1.5
+  FontSize 11
+}
+skinparam rectangle {
+  BackgroundColor #FFFFFF
+  BorderColor #0D47A1
+  BorderThickness 2
+  FontSize 14
+  FontStyle bold
+}
+skinparam arrow {
+  Color #37474F
+  FontSize 10
+}
+
+title **PharmaChain - Use Case Diagram**
+
+actor "Manufacturer" as M
+actor "Distributor" as D
+actor "Warehouse" as W
+actor "Retailer" as R
+actor "Customer" as C
+actor "Auditor" as A
+actor "Admin" as Adm
+actor "Security\nOfficer" as S
+
+rectangle "PharmaChain System Boundary" {
+
+  usecase "UC-01\nRegister Product" as UC1
+  usecase "UC-02\nCreate Shipment" as UC2
+  usecase "UC-03\nConfirm Warehouse Receipt" as UC3
+  usecase "UC-04\nTransfer Ownership" as UC4
+  usecase "UC-05\nConfirm Delivery" as UC5
+  usecase "UC-06\nVerify Product Authenticity" as UC6
+  usecase "UC-07\nView Audit Trail" as UC7
+  usecase "UC-08\nOnboard Organization" as UC8
+  usecase "UC-09\nManage Keys" as UC9
+  usecase "UC-10\nTrigger Recall" as UC10
+
+  usecase "Sign Transaction" as SIGN
+  usecase "Write Audit Log" as AUD
+  usecase "Raise Dispute" as DISP
+  usecase "Query Ledger" as QL
+
+  UC2 ..> SIGN : <<include>>
+  UC4 ..> SIGN : <<include>>
+  UC4 ..> AUD  : <<include>>
+  UC6 ..> QL   : <<include>>
+  UC7 ..> QL   : <<include>>
+  DISP ..> UC4 : <<extend>>
+}
+
+M --> UC1
+M --> UC2
+M --> UC10
+D --> UC2
+D --> UC4
+D --> DISP
+W --> UC3
+R --> UC4
+R --> UC5
+C --> UC6
+A --> UC7
+A --> UC10
+Adm --> UC8
+Adm --> UC9
+S --> AUD
+
+legend right
+  |= Symbol |= Meaning |
+  | ( ... ) | Use Case |
+  | <<include>> | Mandatory sub-use case |
+  | <<extend>> | Optional / conditional |
+endlegend
+
+@enduml

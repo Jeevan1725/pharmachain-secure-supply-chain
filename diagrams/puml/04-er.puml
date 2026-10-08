@@ -1,0 +1,135 @@
+﻿@startuml
+!theme plain
+hide methods
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Calibri
+skinparam defaultFontSize 10
+skinparam linetype ortho
+skinparam nodesep 30
+skinparam ranksep 50
+skinparam shadowing false
+
+skinparam entity {
+  BackgroundColor #E8F5E9
+  BorderColor #2E7D32
+  BorderThickness 1.5
+  FontSize 10
+}
+skinparam arrow {
+  Color #37474F
+  FontSize 9
+}
+
+title **PharmaChain - Entity-Relationship Diagram**
+
+entity "Organization" as org {
+  **org_id** : UUID <<PK>>
+  --
+  name : string
+  type : enum
+  public_key : text
+  status : enum
+}
+
+entity "User" as usr {
+  **user_id** : UUID <<PK>>
+  --
+  org_id : UUID <<FK>>
+  role : enum
+  email : string
+  password_hash : string
+  mfa_secret : string
+}
+
+entity "Product" as prod {
+  **product_id** : UUID <<PK>>
+  --
+  serial_no : string <<UNIQUE>>
+  manufacturer_id : UUID <<FK>>
+  name : string
+  batch_no : string
+  created_at : timestamp
+  status : enum
+}
+
+entity "Shipment" as ship {
+  **shipment_id** : UUID <<PK>>
+  --
+  product_id : UUID <<FK>>
+  source_org : UUID <<FK>>
+  dest_org : UUID <<FK>>
+  created_at : timestamp
+  status : enum
+}
+
+entity "OwnershipRecord" as own {
+  **record_id** : UUID <<PK>>
+  --
+  product_id : UUID <<FK>>
+  from_org : UUID <<FK>>
+  to_org : UUID <<FK>>
+  timestamp : timestamp
+  signature : text
+  tx_hash : string
+}
+
+entity "WarehouseReceipt" as wr {
+  **receipt_id** : UUID <<PK>>
+  --
+  shipment_id : UUID <<FK>>
+  warehouse_id : UUID <<FK>>
+  received_at : timestamp
+  seal_hash : string
+}
+
+entity "Delivery" as del {
+  **delivery_id** : UUID <<PK>>
+  --
+  shipment_id : UUID <<FK>>
+  retailer_id : UUID <<FK>>
+  customer_id : UUID <<FK>>
+  delivered_at : timestamp
+}
+
+entity "AuditLog" as aud {
+  **log_id** : UUID <<PK>>
+  --
+  actor_id : UUID <<FK>>
+  action : string
+  entity : string
+  entity_id : UUID
+  timestamp : timestamp
+  hash_prev : string
+  hash_curr : string
+  signature : text
+}
+
+entity "KeyStore" as key {
+  **key_id** : UUID <<PK>>
+  --
+  org_id : UUID <<FK>>
+  public_key : text
+  revoked : boolean
+  valid_from : timestamp
+  valid_to : timestamp
+}
+
+org ||--o{ usr : employs
+org ||--o{ prod : manufactures
+prod ||--o{ ship : "shipped as"
+ship ||--|| wr : "received by"
+ship ||--|| del : "delivered as"
+prod ||--o{ own : "ownership history"
+usr ||--o{ aud : performs
+org ||--o{ key : "owns keys"
+
+legend bottom
+  |= Symbol |= Meaning |
+  | PK | Primary Key |
+  | FK | Foreign Key |
+  | One-to-Many | One to many relation |
+  | One-to-One | One to one relation |
+  | <<UNIQUE>> | Unique constraint |
+endlegend
+
+@enduml

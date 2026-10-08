@@ -553,6 +553,281 @@ def add_phase_2(doc):
 
     doc.add_page_break()
 
+
+    # ---------- Phase 3 ----------
+
+def add_ascii(doc, art):
+    """Insert ASCII diagram with box-drawing preservation."""
+    for line in art.split("\n"):
+        p = doc.add_paragraph()
+        p.paragraph_format.space_before = Pt(0)
+        p.paragraph_format.space_after = Pt(0)
+        p.paragraph_format.line_spacing = 1.0
+        p.paragraph_format.left_indent = Inches(0.2)
+        run = p.add_run(line if line else " ")
+        run.font.name = "Consolas"
+        run.font.size = Pt(8.5)
+        run.font.color.rgb = RGBColor(0x20, 0x20, 0x20)
+    doc.add_paragraph().paragraph_format.space_after = Pt(4)
+
+
+def add_phase_3(doc):
+    h1(doc, "Phase 3 - Requirements Analysis and UML")
+
+    h2(doc, "3.1 Use Case Diagram")
+    doc.add_paragraph(
+        "The diagram shows 8 actors (5 primary supply-chain roles + 3 "
+        "supporting roles) and 10 major use cases with include/extend "
+        "relationships that enforce security invariants."
+    )
+
+    add_ascii(doc, r"""
++----------------------------------------------------------------------------------+
+|                            PHARMACHAIN SYSTEM BOUNDARY                           |
+|                                                                                  |
+|   (Register Product)          (Create Shipment)          (Confirm Warehouse      |
+|         |                          |                          Receipt)           |
+|         |                          |                            |                |
+|         |  <<include>>             |  <<include>>               |                |
+|         +--> (Sign Transaction)    +--> (Write Audit Log) <------+                |
+|                                                                                  |
+|   (Transfer Ownership) ---<<include>>---> (Sign Transaction)                     |
+|         |                                                                        |
+|         |                                                                        |
+|         +---<<extend>>---> (Raise Dispute)                                       |
+|         |                                                                        |
+|         +---<<include>>---> (Write Audit Log)                                    |
+|                                                                                  |
+|   (Confirm Delivery)          (Verify Authenticity)      (View Audit Trail)      |
+|         |                          |                            |                |
+|         +--> (Write Audit Log)     +--> (Query Ledger)          +--> (Query      |
+|                                                                        Ledger)   |
+|                                                                                  |
+|   (Onboard Organization)      (Manage Keys)              (Trigger Recall)        |
+|         |                          |                            |                |
+|         +--> (Issue Cert)          +--> (Rotate/Revoke)         +--> (Trace      |
+|                                                                        Backward) |
++----------------------------------------------------------------------------------+
+
+   ACTORS (Left side)                          ACTORS (Right side)
+   ------------------                          -------------------
+      (Manufacturer) ----------------------------> Register Product
+                                                -> Create Shipment
+                                                -> Trigger Recall
+
+      (Distributor) -----------------------------> Create Shipment
+                                                -> Transfer Ownership
+                                                -> Raise Dispute
+
+      (Warehouse) -------------------------------> Confirm Warehouse Receipt
+
+      (Retailer) --------------------------------> Confirm Delivery
+                                                -> Transfer Ownership
+
+      (Customer) --------------------------------> Verify Product Authenticity
+                                                ---------------------------------
+                                                                                 |
+      (Auditor) ------------------------------------ View Audit Trail <----------+
+                                                -> Trigger Recall
+
+      (Admin) -------------------------------------> Onboard Organization
+                                                -> Manage Keys
+
+      (Security Officer) --------------------------> Monitor Anomalies (ledger +
+                                                     audit alerts)
+
+   LEGEND
+   ------
+   ( ... )        = Use Case (oval in formal UML)
+   <<include>>    = mandatory sub-use case
+   <<extend>>     = optional/conditional sub-use case
+   ----->         = association / flow
+""")
+
+    h3(doc, "3.1.1 Actors and Their Use Cases")
+    t = doc.add_table(rows=1, cols=2)
+    t.style = "Table Grid"
+    hdr = t.rows[0].cells
+    hdr[0].text = "Actor"
+    hdr[1].text = "Use Cases"
+    actor_uc = [
+        ("Manufacturer", "Register Product, Create Shipment, Trigger Recall"),
+        ("Distributor", "Create Shipment, Transfer Ownership, Raise Dispute"),
+        ("Warehouse", "Confirm Warehouse Receipt"),
+        ("Retailer", "Confirm Delivery, Transfer Ownership"),
+        ("Customer", "Verify Product Authenticity"),
+        ("Auditor", "View Audit Trail, Trigger Recall"),
+        ("Admin", "Onboard Organization, Manage Keys"),
+        ("Security Officer", "Monitor Anomalies"),
+    ]
+    for r in actor_uc:
+        cells = t.add_row().cells
+        cells[0].text, cells[1].text = r[0], r[1]
+    style_table(t)
+
+    h3(doc, "3.1.2 Include / Extend Relationships")
+    t = doc.add_table(rows=1, cols=3)
+    t.style = "Table Grid"
+    hdr = t.rows[0].cells
+    hdr[0].text = "Source Use Case"
+    hdr[1].text = "Relationship"
+    hdr[2].text = "Target Use Case"
+    rels = [
+        ("Create Shipment", "<<include>>", "Sign Transaction"),
+        ("Transfer Ownership", "<<include>>", "Sign Transaction"),
+        ("Any state change", "<<include>>", "Write Audit Log"),
+        ("Verify Authenticity", "<<include>>", "Query Ledger"),
+        ("View Audit Trail", "<<include>>", "Query Ledger"),
+        ("Transfer Ownership", "<<extend>>", "Raise Dispute (optional)"),
+    ]
+    for r in rels:
+        cells = t.add_row().cells
+        for i, val in enumerate(r):
+            cells[i].text = val
+    style_table(t)
+
+    h2(doc, "3.2 Use Case Specification 1 - Transfer Ownership")
+    t = doc.add_table(rows=0, cols=2)
+    t.style = "Table Grid"
+    ucs1 = [
+        ("Use Case ID", "UC-04"),
+        ("Name", "Transfer Ownership"),
+        ("Actor", "Distributor (current owner)"),
+        ("Precondition",
+         "Product exists; actor authenticated via mTLS + MFA; actor holds "
+         "current ownership; HSM-backed private key available."),
+        ("Main Flow",
+         "1. Actor selects product.\n"
+         "2. Actor enters target organization.\n"
+         "3. System verifies RBAC (role) + ABAC (organization).\n"
+         "4. Actor signs transfer payload with private key.\n"
+         "5. System verifies signature + nonce + timestamp.\n"
+         "6. System writes append-only audit log entry.\n"
+         "7. System updates ownership on ledger (hash-chained).\n"
+         "8. System returns confirmation with tx_hash."),
+        ("Alternative Flow 3a",
+         "Actor not authorized -> reject 403, log attempt, alert Security Officer."),
+        ("Alternative Flow 5a",
+         "Signature invalid OR nonce reused -> abort transfer, alert, log."),
+        ("Exception Flow 7a",
+         "Ledger write fails -> rollback DB transaction, retry with backoff."),
+        ("Postcondition",
+         "Ownership transferred atomically; immutable ledger entry with "
+         "tx_hash; audit record created; notifications sent."),
+        ("Security Requirements",
+         "SR-03 (signature + hash chain), SR-05 (nonce), SR-06/07 (RBAC+ABAC), "
+         "SR-10 (audit), SR-12 (non-repudiation)."),
+    ]
+    for k, v in ucs1:
+        row = t.add_row().cells
+        row[0].text = k
+        row[1].text = v
+        # bold first cell
+        if row[0].paragraphs[0].runs:
+            row[0].paragraphs[0].runs[0].bold = True
+    style_table(t, header=False)
+
+    h2(doc, "3.3 Use Case Specification 2 - Confirm Warehouse Receipt")
+    t = doc.add_table(rows=0, cols=2)
+    t.style = "Table Grid"
+    ucs2 = [
+        ("Use Case ID", "UC-03"),
+        ("Name", "Confirm Warehouse Receipt"),
+        ("Actor", "Warehouse operator"),
+        ("Precondition",
+         "Shipment exists in state IN_TRANSIT; shipment ID matches incoming "
+         "goods; seal/hash available for verification."),
+        ("Main Flow",
+         "1. Operator scans shipment QR code.\n"
+         "2. System validates QR signature (PKI).\n"
+         "3. System retrieves shipment record from ledger.\n"
+         "4. Operator enters/verifies physical seal hash.\n"
+         "5. System compares seal hash to expected value.\n"
+         "6. Operator signs receipt with HSM-backed key.\n"
+         "7. System updates status to RECEIVED, writes audit + ledger.\n"
+         "8. Notifications sent to Manufacturer and Distributor."),
+        ("Alternative Flow 5a",
+         "Seal hash mismatch -> quarantine, alert Security Officer, audit log."),
+        ("Alternative Flow 2a",
+         "QR signature invalid -> reject, do not proceed, log attempt."),
+        ("Exception Flow 7a",
+         "Ledger write fails -> rollback, retry with exponential backoff."),
+        ("Postcondition",
+         "Shipment marked RECEIVED; receipt record created; audit and ledger "
+         "entries written; origin orgs notified."),
+        ("Security Requirements",
+         "SR-02 (mTLS), SR-04 (SHA-256 hash), SR-10 (audit), SR-14 (anomaly)."),
+    ]
+    for k, v in ucs2:
+        row = t.add_row().cells
+        row[0].text = k
+        row[1].text = v
+        if row[0].paragraphs[0].runs:
+            row[0].paragraphs[0].runs[0].bold = True
+    style_table(t, header=False)
+
+    h2(doc, "3.4 Scenario-Based Analysis Model")
+    doc.add_paragraph(
+        "Scenario: Receive Shipment and Confirm Receipt (adapted from the "
+        "exam template scenario 'Attend Examination and Submit Answers', "
+        "retargeted to PharmaChain)."
+    )
+    t = doc.add_table(rows=1, cols=3)
+    t.style = "Table Grid"
+    hdr = t.rows[0].cells
+    hdr[0].text = "Step"
+    hdr[1].text = "Actor Action"
+    hdr[2].text = "System Response"
+    steps = [
+        ("1", "Warehouse scans shipment QR", "Validates QR signature against PKI"),
+        ("2", "-", "Retrieves shipment record from ledger"),
+        ("3", "Verifies physical seal hash", "Compares seal hash to expected value"),
+        ("4", "Clicks 'Confirm Receipt'", "Prompts for digital signature"),
+        ("5", "Signs with HSM key", "Verifies signature + RBAC + ABAC"),
+        ("6", "-", "Writes audit entry (append-only) + ledger hash"),
+        ("7", "-", "Updates status to RECEIVED"),
+        ("8", "-", "Sends notification to Manufacturer + Distributor"),
+        ("Alt 3a", "Seal mismatch detected", "Quarantine + alert + audit log"),
+        ("Alt 5a", "Invalid signature", "Reject, retry prompt, log attempt"),
+        ("Exc 2a", "Ledger write fails", "Rollback DB, retry, escalate"),
+    ]
+    for r in steps:
+        cells = t.add_row().cells
+        for i, val in enumerate(r):
+            cells[i].text = val
+    style_table(t)
+
+    h2(doc, "3.5 Consistency With Phase 2 Requirements")
+    doc.add_paragraph(
+        "Every use case maps to at least one functional requirement (FR) "
+        "and carries forward the relevant security requirements (SR)."
+    )
+    t = doc.add_table(rows=1, cols=3)
+    t.style = "Table Grid"
+    hdr = t.rows[0].cells
+    hdr[0].text = "Use Case"
+    hdr[1].text = "FR(s)"
+    hdr[2].text = "SR(s)"
+    c = [
+        ("UC-01 Register Product", "FR-01", "SR-04, SR-10"),
+        ("UC-02 Create Shipment", "FR-02", "SR-03, SR-05, SR-10"),
+        ("UC-03 Confirm Receipt", "FR-03", "SR-04, SR-10, SR-14"),
+        ("UC-04 Transfer Ownership", "FR-04", "SR-03, SR-05, SR-06, SR-07, SR-10, SR-12"),
+        ("UC-05 Confirm Delivery", "FR-05", "SR-10, SR-12"),
+        ("UC-06 Verify Authenticity", "FR-07", "SR-04"),
+        ("UC-07 View Audit Trail", "FR-08", "SR-10, SR-11"),
+        ("UC-08 Onboard Organization", "FR-09", "SR-01, SR-02, SR-13"),
+        ("UC-09 Manage Keys", "FR-10", "SR-13"),
+        ("UC-10 Trigger Recall", "FR-12", "SR-10"),
+    ]
+    for r in c:
+        cells = t.add_row().cells
+        for i, val in enumerate(r):
+            cells[i].text = val
+    style_table(t)
+
+    doc.add_page_break()
+
 # ---------- main ----------
 
 def main():
@@ -571,6 +846,7 @@ def main():
     build_toc_and_thread(doc)
     add_phase_1(doc)
     add_phase_2(doc)
+    add_phase_3(doc)
     # Future phases appended here.
 
     doc.save(DOC_PATH)

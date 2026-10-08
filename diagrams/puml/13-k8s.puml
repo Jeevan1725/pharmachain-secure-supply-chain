@@ -1,0 +1,93 @@
+﻿@startuml
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Calibri
+skinparam defaultFontSize 10
+skinparam nodesep 22
+skinparam ranksep 45
+skinparam linetype ortho
+skinparam shadowing false
+skinparam componentStyle rectangle
+
+skinparam component {
+  BackgroundColor #E3F2FD
+  BorderColor #1565C0
+  BorderThickness 1.2
+  FontSize 10
+}
+skinparam database {
+  BackgroundColor #E8F5E9
+  BorderColor #2E7D32
+  BorderThickness 1.2
+  FontSize 10
+}
+skinparam package {
+  BackgroundColor #F5F5F5
+  BorderColor #616161
+  FontStyle bold
+  FontSize 12
+}
+skinparam arrow {
+  Color #37474F
+  FontSize 9
+}
+
+title **PharmaChain - Kubernetes Deployment**
+
+package "Kubernetes Cluster (namespace: scm)" #FFFFFF {
+
+  package "Ingress Layer" #FFE0B2 {
+    [Ingress Controller\n(TLS termination)] as ING
+  }
+
+  package "Application Pods" #E3F2FD {
+    [Auth Pod] as AUTH
+    [Product Pod] as PROD
+    [Shipment Pod] as SHIP
+    [Ownership Pod] as OWN
+    [Warehouse Pod] as WH
+    [Delivery Pod] as DEL
+    [Audit Pod] as AUD
+  }
+
+  package "Data Pods" #E8F5E9 {
+    database "PostgreSQL\nStatefulSet" as PG
+    database "Redis\nStatefulSet" as RD
+  }
+
+  package "Fabric Network" #F3E5F5 {
+    database "Orderer" as ORD
+    database "Peer 0" as PEER0
+    database "Peer 1" as PEER1
+  }
+
+  package "Secrets and Config" #ECEFF1 {
+    [K8s Secrets] as SEC
+    [Vault] as VLT
+  }
+}
+
+ING --> AUTH
+ING --> PROD
+ING --> SHIP
+ING --> OWN
+
+AUTH --> PG
+OWN --> PG
+OWN --> PEER0
+OWN --> PEER1
+AUD --> PEER0
+
+AUTH --> SEC
+OWN --> VLT
+
+legend right
+  |= Element |= Purpose |
+  | Ingress | TLS termination + routing |
+  | Application Pods | Microservices (non-root) |
+  | Data Pods | StatefulSet with PVC |
+  | Fabric Network | Permissioned ledger nodes |
+  | Secrets | Vault + K8s Secrets |
+endlegend
+
+@enduml

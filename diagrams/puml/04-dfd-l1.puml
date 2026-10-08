@@ -1,0 +1,102 @@
+﻿@startuml
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Calibri
+skinparam defaultFontSize 10
+skinparam nodesep 25
+skinparam ranksep 45
+skinparam linetype ortho
+skinparam shadowing false
+
+skinparam rectangle {
+  BackgroundColor #FFFFFF
+  BorderColor #0D47A1
+  BorderThickness 2
+  FontStyle bold
+  FontSize 13
+}
+skinparam component {
+  BackgroundColor #E3F2FD
+  BorderColor #1565C0
+  BorderThickness 1.2
+  FontSize 10
+}
+skinparam database {
+  BackgroundColor #E8F5E9
+  BorderColor #2E7D32
+  BorderThickness 1.2
+  FontSize 10
+}
+skinparam actor {
+  BackgroundColor #FFF9C4
+  BorderColor #F57F17
+  FontSize 11
+}
+skinparam arrow {
+  Color #37474F
+  FontSize 9
+}
+
+title **PharmaChain - Level-1 DFD with Trust Boundaries**
+
+actor "Manufacturer" as M
+actor "Distributor" as D
+actor "Warehouse" as W
+actor "Retailer" as R
+actor "Customer" as C
+actor "Auditor" as A
+
+rectangle "TRUST BOUNDARY 1\nExternal to Edge" as TB1 {
+  component "API Gateway\n(mTLS + Rate Limit)" as GW
+}
+
+rectangle "TRUST BOUNDARY 2\nApplication Zone" as TB2 {
+  component "P1\nRegister Product" as P1
+  component "P2\nCreate Shipment" as P2
+  component "P3\nConfirm Receipt" as P3
+  component "P4\nTransfer Ownership" as P4
+  component "P5\nConfirm Delivery" as P5
+  component "P6\nAudit and Monitor" as P6
+
+  database "D1\nProduct" as D1
+  database "D2\nShipment" as D2
+  database "D3\nReceipt" as D3
+  database "D4\nOwnership" as D4
+  database "D6\nDelivery" as D6
+}
+
+rectangle "TRUST BOUNDARY 3\nLedger Zone" as TB3 {
+  database "D5\nImmutable\nLedger" as D5
+}
+
+M --> GW
+D --> GW
+W --> GW
+R --> GW
+C --> GW
+A --> GW
+
+GW --> P1
+GW --> P2
+GW --> P3
+GW --> P4
+GW --> P5
+GW --> P6
+
+P1 --> D1
+P2 --> D2
+P3 --> D3
+P4 --> D4
+P4 --> D5 : "signed\nhash-chained"
+P5 --> D6
+P6 --> D5 : "read-only"
+
+legend bottom
+  |= Symbol |= Meaning |
+  | P# | Process |
+  | D# | Data Store |
+  | Boundary | Trust Boundary |
+  | Stick figure | External Entity |
+endlegend
+
+@enduml

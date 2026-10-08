@@ -1,0 +1,66 @@
+﻿@startuml
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Calibri
+skinparam defaultFontSize 11
+skinparam nodesep 30
+skinparam ranksep 55
+skinparam shadowing false
+
+skinparam rectangle {
+  BackgroundColor #FFEBEE
+  BorderColor #C62828
+  BorderThickness 1.5
+  FontSize 11
+}
+skinparam arrow {
+  Color #B71C1C
+  FontSize 10
+}
+
+title **PharmaChain - Attack Tree: Fraudulent Ownership Transfer**
+
+rectangle "ROOT GOAL\nFraudulent Ownership Transfer" as ROOT #FFCDD2
+
+rectangle "A1\nSteal Distributor's\nPrivate Key" as A1
+rectangle "A2\nExploit API\nAuthorization Bug" as A2
+rectangle "A3\nReplay Old\nSigned Transfer" as A3
+rectangle "A4\nInsider at\nLedger Service" as A4
+
+rectangle "A1a\nCompromise HSM" as A1a
+rectangle "A1b\nBypass MFA" as A1b
+rectangle "A1c\nPhish Employee" as A1c
+
+rectangle "A2a\nGuess Product ID" as A2a
+rectangle "A2b\nBypass ABAC" as A2b
+
+rectangle "A3a\nCapture Network\nTraffic" as A3a
+rectangle "A3b\nBypass Nonce\nCheck" as A3b
+
+rectangle "A4a\nBribe Operator" as A4a
+rectangle "A4b\nBypass Dual\nControl" as A4b
+
+ROOT --> A1
+ROOT --> A2
+ROOT --> A3
+ROOT --> A4
+
+A1 --> A1a
+A1 --> A1b
+A1 --> A1c
+A2 --> A2a
+A2 --> A2b
+A3 --> A3a
+A3 --> A3b
+A4 --> A4a
+A4 --> A4b
+
+note bottom of ROOT
+  **Mitigating Controls**
+  - A1: HSM + MFA + 90-day key rotation
+  - A2: RBAC + ABAC + UUIDv4 identifiers
+  - A3: Nonce + timestamp + idempotency keys
+  - A4: Dual-control + segregation of duties + SIEM
+end note
+
+@enduml

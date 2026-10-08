@@ -1,0 +1,109 @@
+﻿@startuml
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Calibri
+skinparam defaultFontSize 10
+skinparam nodesep 20
+skinparam ranksep 45
+skinparam linetype ortho
+skinparam shadowing false
+skinparam componentStyle rectangle
+
+skinparam component {
+  BackgroundColor #E3F2FD
+  BorderColor #1565C0
+  BorderThickness 1.2
+  FontSize 10
+}
+skinparam database {
+  BackgroundColor #E8F5E9
+  BorderColor #2E7D32
+  BorderThickness 1.2
+  FontSize 10
+}
+skinparam package {
+  BackgroundColor #F5F5F5
+  BorderColor #616161
+  FontStyle bold
+  FontSize 12
+}
+skinparam arrow {
+  Color #37474F
+  FontSize 9
+}
+
+title **PharmaChain - Layered Software Architecture**
+
+package "External Organizations" #FFF9C4 {
+  [Manufacturer App]
+  [Distributor App]
+  [Warehouse App]
+  [Retailer App]
+  [Customer Portal]
+}
+
+package "Edge Layer" #FFE0B2 {
+  [API Gateway\n(mTLS + OAuth2 + Rate Limit)]
+}
+
+package "Application Microservices" #E3F2FD {
+  [Auth Service\n(MFA + PKI)]
+  [Product Service]
+  [Shipment Service]
+  [Ownership Service\n(signature + ledger)]
+  [Warehouse Service]
+  [Delivery Service]
+  [Audit Service\n(read-only)]
+  [Notification Service]
+  [Anomaly Detection]
+}
+
+package "Data Layer" #E8F5E9 {
+  database "PostgreSQL" as PG
+  database "Redis Cache" as RD
+}
+
+package "Ledger and Keys" #F3E5F5 {
+  database "Hyperledger Fabric" as HLF
+  database "HSM\n(Key Store)" as HSM
+}
+
+package "Observability" #ECEFF1 {
+  [ELK Stack]
+  [Prometheus + Grafana]
+  [SIEM]
+}
+
+[Manufacturer App] --> [API Gateway\n(mTLS + OAuth2 + Rate Limit)]
+[Distributor App] --> [API Gateway\n(mTLS + OAuth2 + Rate Limit)]
+[Warehouse App] --> [API Gateway\n(mTLS + OAuth2 + Rate Limit)]
+[Retailer App] --> [API Gateway\n(mTLS + OAuth2 + Rate Limit)]
+[Customer Portal] --> [API Gateway\n(mTLS + OAuth2 + Rate Limit)]
+
+[API Gateway\n(mTLS + OAuth2 + Rate Limit)] --> [Auth Service\n(MFA + PKI)]
+[API Gateway\n(mTLS + OAuth2 + Rate Limit)] --> [Product Service]
+[API Gateway\n(mTLS + OAuth2 + Rate Limit)] --> [Shipment Service]
+[API Gateway\n(mTLS + OAuth2 + Rate Limit)] --> [Ownership Service\n(signature + ledger)]
+[API Gateway\n(mTLS + OAuth2 + Rate Limit)] --> [Warehouse Service]
+[API Gateway\n(mTLS + OAuth2 + Rate Limit)] --> [Delivery Service]
+[API Gateway\n(mTLS + OAuth2 + Rate Limit)] --> [Audit Service\n(read-only)]
+
+[Product Service] --> PG
+[Shipment Service] --> PG
+[Ownership Service\n(signature + ledger)] --> PG
+[Ownership Service\n(signature + ledger)] --> HLF
+[Ownership Service\n(signature + ledger)] --> HSM
+[Warehouse Service] --> PG
+[Delivery Service] --> PG
+[Audit Service\n(read-only)] --> HLF
+[Anomaly Detection] --> HLF
+
+[Product Service] --> [Notification Service]
+[Shipment Service] --> [Notification Service]
+[Ownership Service\n(signature + ledger)] --> [Notification Service]
+
+[Auth Service\n(MFA + PKI)] --> [ELK Stack]
+[Ownership Service\n(signature + ledger)] --> [ELK Stack]
+[Anomaly Detection] --> [SIEM]
+
+@enduml

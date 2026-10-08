@@ -1,0 +1,63 @@
+﻿@startuml
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Calibri
+skinparam defaultFontSize 11
+skinparam nodesep 40
+skinparam ranksep 60
+skinparam shadowing false
+
+skinparam rectangle {
+  BackgroundColor #BBDEFB
+  BorderColor #0D47A1
+  BorderThickness 2
+  FontSize 16
+  FontStyle bold
+}
+skinparam actor {
+  BackgroundColor #FFF9C4
+  BorderColor #F57F17
+  BorderThickness 1.5
+  FontSize 12
+}
+skinparam arrow {
+  Color #37474F
+  FontSize 10
+}
+
+title **PharmaChain - Level-0 DFD (Context Diagram)**
+
+actor "Manufacturer" as M
+actor "Distributor" as D
+actor "Warehouse" as W
+actor "Retailer" as R
+actor "Customer" as C
+actor "Auditor" as A
+actor "Admin" as Adm
+
+rectangle "0\nPharmaChain\nSupply Chain System" as SYS
+
+M --> SYS : "product registration\nshipment creation"
+D --> SYS : "shipment\nownership transfer"
+W --> SYS : "warehouse receipt\nseal hash"
+R --> SYS : "delivery confirmation"
+C --> SYS : "authenticity query"
+A --> SYS : "audit query"
+Adm --> SYS : "org onboarding\nkey management"
+
+SYS --> M : "status\nnotifications"
+SYS --> D : "transfer confirmation"
+SYS --> W : "shipment details"
+SYS --> R : "delivery receipt"
+SYS --> C : "authenticity result"
+SYS --> A : "audit trail\n(read-only)"
+SYS --> Adm : "org / key status"
+
+legend right
+  |= Symbol |= Meaning |
+  | Rectangle | Process (System) |
+  | Stick figure | External Entity |
+  | Arrow | Data Flow |
+endlegend
+
+@enduml
