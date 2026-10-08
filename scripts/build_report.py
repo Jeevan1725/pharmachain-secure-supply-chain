@@ -1368,6 +1368,282 @@ def add_phase_8(doc):
     )
 
     doc.add_page_break()
+
+    # ---------- Phase 9 ----------
+
+def add_phase_9(doc):
+    h1(doc, "Phase 9 - Product Backlog and Jira/Scrum")
+
+    h2(doc, "9.1 Epics")
+    t = doc.add_table(rows=1, cols=2)
+    t.style = "Table Grid"
+    hdr = t.rows[0].cells
+    hdr[0].text = "Epic"
+    hdr[1].text = "Description"
+    epics = [
+        ("E1", "Identity & Access - PKI, MFA, RBAC, ABAC"),
+        ("E2", "Product Lifecycle - registration, serialization, lookup"),
+        ("E3", "Shipment & Logistics - shipments, receipts, deliveries"),
+        ("E4", "Ownership & Ledger - signed transfers, hash chain"),
+        ("E5", "Audit & Compliance - immutable log, anomaly detection, reporting"),
+    ]
+    for r in epics:
+        cells = t.add_row().cells
+        cells[0].text, cells[1].text = r[0], r[1]
+    style_table(t)
+
+    h2(doc, "9.2 User Stories")
+    doc.add_paragraph(
+        "12 user stories are defined across the 5 epics. Each follows the "
+        "As a ... I want ... so that ... format with acceptance criteria."
+    )
+    t = doc.add_table(rows=1, cols=5)
+    t.style = "Table Grid"
+    hdr = t.rows[0].cells
+    hdr[0].text = "ID"
+    hdr[1].text = "Epic"
+    hdr[2].text = "User Story"
+    hdr[3].text = "Priority"
+    hdr[4].text = "Acceptance Criteria"
+    stories = [
+        ("US-01", "E1",
+         "As a Manufacturer, I want to register with PKI so that my identity is trusted",
+         "High",
+         "Certificate issued; mTLS works"),
+        ("US-02", "E1",
+         "As an Admin, I want to onboard an org so that it can join the network",
+         "High",
+         "Org has keys and RBAC roles"),
+        ("US-03", "E1",
+         "As a User, I want MFA so that my account is protected",
+         "High",
+         "TOTP required; recovery codes"),
+        ("US-04", "E2",
+         "As a Manufacturer, I want to register a product with a unique serial so it is traceable",
+         "High",
+         "Duplicate serial rejected; ledger entry"),
+        ("US-05", "E2",
+         "As a Customer, I want to verify product authenticity so I trust my purchase",
+         "High",
+         "Signed query returns valid/invalid"),
+        ("US-06", "E3",
+         "As a Distributor, I want to create a shipment so goods move",
+         "High",
+         "Shipment ID + signed record"),
+        ("US-07", "E3",
+         "As a Warehouse, I want to confirm receipt so chain of custody continues",
+         "High",
+         "Seal hash verified; audit logged"),
+        ("US-08", "E3",
+         "As a Retailer, I want to confirm delivery so the sale is complete",
+         "High",
+         "Delivery record + notification"),
+        ("US-09", "E4",
+         "As a Distributor, I want to transfer ownership so legal title moves",
+         "High",
+         "Signature verified; ledger updated"),
+        ("US-10", "E5",
+         "As an Auditor, I want to view immutable audit logs so I can investigate",
+         "High",
+         "Read-only; hash verified"),
+        ("US-11", "E5",
+         "As a Security Officer, I want anomaly alerts so fraud is detected",
+         "Medium",
+         "Alert on duplicate/odd transfer"),
+        ("US-12", "E3",
+         "As a Distributor, I want real-time status so I can plan logistics",
+         "Medium",
+         "Status < 1s; push notifications"),
+    ]
+    for r in stories:
+        cells = t.add_row().cells
+        for i, val in enumerate(r):
+            cells[i].text = val
+    style_table(t)
+
+    h2(doc, "9.3 Jira Scrum Project Setup")
+    for b in [
+        "Project key: SCM-SEC",
+        "Board type: Scrum",
+        "Epics: E1..E5",
+        "Stories: US-01..US-12",
+        "Tasks per story: design, code, test, security review",
+        "Workflow: TO DO -> IN PROGRESS -> TESTING -> DONE",
+    ]:
+        doc.add_paragraph(b, style="List Bullet")
+
+    h2(doc, "9.4 Sprint Plan")
+    t = doc.add_table(rows=1, cols=3)
+    t.style = "Table Grid"
+    hdr = t.rows[0].cells
+    hdr[0].text = "Sprint"
+    hdr[1].text = "Sprint Goal"
+    hdr[2].text = "Stories"
+    sprints = [
+        ("Sprint 1 (2 weeks)",
+         "Secure Foundation - Identity, Product, Audit",
+         "US-01, US-02, US-03, US-04, US-10"),
+        ("Sprint 2 (2 weeks)",
+         "Logistics and Ownership - Shipments, Receipts, Transfers, Anomaly",
+         "US-05, US-06, US-07, US-08, US-09, US-11, US-12"),
+    ]
+    for r in sprints:
+        cells = t.add_row().cells
+        for i, val in enumerate(r):
+            cells[i].text = val
+    style_table(t)
+
+    doc.add_page_break()
+
+
+# ---------- Phase 10 ----------
+
+def add_phase_10(doc):
+    h1(doc, "Phase 10 - Sprint Execution and Scrum Metrics")
+
+    h2(doc, "10.1 Sprint Board (Sprint 2)")
+    t = doc.add_table(rows=1, cols=4)
+    t.style = "Table Grid"
+    hdr = t.rows[0].cells
+    hdr[0].text = "TO DO"
+    hdr[1].text = "IN PROGRESS"
+    hdr[2].text = "TESTING"
+    hdr[3].text = "DONE"
+    board = [
+        ("US-12", "US-08", "US-07", "US-05, US-06"),
+        ("-", "-", "US-11", "-"),
+    ]
+    for r in board:
+        cells = t.add_row().cells
+        for i, val in enumerate(r):
+            cells[i].text = val
+    style_table(t)
+
+    h2(doc, "10.2 Daily Scrum Entry (Day 3)")
+    t = doc.add_table(rows=1, cols=4)
+    t.style = "Table Grid"
+    hdr = t.rows[0].cells
+    hdr[0].text = "Member"
+    hdr[1].text = "Yesterday"
+    hdr[2].text = "Today"
+    hdr[3].text = "Blockers"
+    daily = [
+        ("Dev A", "Finished US-06", "Start US-07", "None"),
+        ("Dev B", "US-09 signature logic", "Unit tests for US-09", "HSM access pending"),
+        ("QA", "Test plan for US-05", "Execute US-05 tests", "None"),
+        ("Security", "Threat review US-09", "STRIDE recheck", "None"),
+    ]
+    for r in daily:
+        cells = t.add_row().cells
+        for i, val in enumerate(r):
+            cells[i].text = val
+    style_table(t)
+
+    h2(doc, "10.3 Sprint Burndown Chart")
+    doc.add_paragraph(
+        "Sprint 2 started with 20 story points. The actual line tracks the "
+        "ideal line with a slight under-burn that resulted in a 2 SP carry-over."
+    )
+    t = doc.add_table(rows=1, cols=3)
+    t.style = "Table Grid"
+    hdr = t.rows[0].cells
+    hdr[0].text = "Day"
+    hdr[1].text = "Ideal SP"
+    hdr[2].text = "Actual SP"
+    burndown = [
+        ("0", "20", "20"),
+        ("2", "16", "17"),
+        ("4", "12", "13"),
+        ("6", "8", "9"),
+        ("8", "4", "5"),
+        ("10", "0", "2 (carry-over US-12)"),
+    ]
+    for r in burndown:
+        cells = t.add_row().cells
+        for i, val in enumerate(r):
+            cells[i].text = val
+    style_table(t)
+
+    h2(doc, "10.4 Scrum Metrics")
+    t = doc.add_table(rows=1, cols=2)
+    t.style = "Table Grid"
+    hdr = t.rows[0].cells
+    hdr[0].text = "Metric"
+    hdr[1].text = "Value"
+    metrics = [
+        ("Velocity (Sprint 1)", "18 story points"),
+        ("Velocity (Sprint 2)", "18 story points"),
+        ("Average velocity", "18 story points"),
+        ("Defects found", "4 (1 High, 2 Medium, 1 Low)"),
+        ("Defects fixed", "3"),
+        ("Defects carried over", "1 (Low)"),
+        ("Stories completed", "11 of 12"),
+        ("Carry-over", "US-12 (real-time status)"),
+    ]
+    for r in metrics:
+        cells = t.add_row().cells
+        cells[0].text, cells[1].text = r[0], r[1]
+    style_table(t)
+
+    h2(doc, "10.5 Defect Log")
+    t = doc.add_table(rows=1, cols=5)
+    t.style = "Table Grid"
+    hdr = t.rows[0].cells
+    hdr[0].text = "ID"
+    hdr[1].text = "Severity"
+    hdr[2].text = "Description"
+    hdr[3].text = "Fix"
+    hdr[4].text = "Status"
+    defects = [
+        ("DEF-001", "High", "Replay in ownership transfer API", "Nonce + timestamp validation", "Fixed"),
+        ("DEF-002", "Medium", "Duplicate serial race condition", "DB unique constraint + transaction", "Fixed"),
+        ("DEF-003", "Medium", "Anomaly alert fired on legitimate night shift", "Refined rule (shift-aware)", "Fixed"),
+        ("DEF-004", "Low", "Timestamp formatting inconsistency", "Deferred to Sprint 3", "Open"),
+    ]
+    for r in defects:
+        cells = t.add_row().cells
+        for i, val in enumerate(r):
+            cells[i].text = val
+    style_table(t)
+
+    h2(doc, "10.6 Sprint Review Outcome")
+    doc.add_paragraph(
+        "Stakeholders (Manufacturer, Distributor, Auditor) accepted 11 stories. "
+        "The team demonstrated end-to-end flow: product registration -> shipment "
+        "-> warehouse receipt -> ownership transfer -> audit trail."
+    )
+    doc.add_paragraph(
+        "Retailer requested better anomaly alert UI for non-technical operators. "
+        "This was added to the Sprint 3 backlog."
+    )
+
+    h2(doc, "10.7 Sprint Retrospective")
+    t = doc.add_table(rows=1, cols=2)
+    t.style = "Table Grid"
+    hdr = t.rows[0].cells
+    hdr[0].text = "What Went Well"
+    hdr[1].text = "What To Improve"
+    retro = [
+        ("Cross-org daily scrums surfaced blockers early",
+         "Add HSM access earlier in the sprint"),
+        ("Security review as part of Definition of Done caught replay bug",
+         "Pair-program security-critical stories (US-09)"),
+        ("Velocity stable at 18 SP across both sprints",
+         "Refine carry-over estimation"),
+    ]
+    for r in retro:
+        cells = t.add_row().cells
+        cells[0].text, cells[1].text = r[0], r[1]
+    style_table(t)
+
+    h3(doc, "Two Improvement Actions for Sprint 3")
+    for b in [
+        "Provision HSM development keys before Sprint 3 planning (owner: DevOps).",
+        "Adopt pair programming on all signature-related stories (owner: Dev Team).",
+    ]:
+        doc.add_paragraph(b, style="List Bullet")
+
+    doc.add_page_break()
 # ---------- main ----------
 
 def main():
@@ -1391,8 +1667,9 @@ def main():
     add_phase_6(doc)
     add_phase_7(doc)
     add_phase_8(doc)
+    add_phase_9(doc)
+    add_phase_10(doc)
     # Future phases appended here.
-
     doc.save(DOC_PATH)
     print(f"[OK] Styled report written to: {DOC_PATH}")
 
