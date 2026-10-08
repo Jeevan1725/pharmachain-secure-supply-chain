@@ -1,0 +1,203 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>PharmaChain — Shipment Tracking</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .timeline { padding: 6px 0; }
+  .tl-row { display: grid; grid-template-columns: 30px 1fr; gap: 16px; padding: 12px 0; position: relative; }
+  .tl-dot { width: 30px; height: 30px; border-radius: 50%; background: var(--green-500); display: grid; place-items: center; color: #fff; box-shadow: 0 4px 14px rgba(16,185,129,0.4); z-index: 1; }
+  .tl-dot svg { width: 14px; height: 14px; stroke-width: 3; }
+  .tl-dot.pending { background: var(--slate-300); box-shadow: none; }
+  .tl-line { position: absolute; left: 14px; top: 42px; bottom: -12px; width: 2px; background: linear-gradient(180deg, var(--green-500), var(--slate-200)); }
+  .tl-body { padding-top: 4px; }
+  .tl-title { font-weight: 600; font-size: 14px; color: var(--navy-900); margin-bottom: 3px; }
+  .tl-meta { font-size: 12.5px; color: var(--slate-500); display: flex; gap: 14px; }
+  .tl-meta .hash { font-family: Consolas, monospace; color: var(--slate-400); }
+  .temp-chip { display: inline-flex; align-items: center; gap: 6px; background: var(--green-50); color: var(--green-600); padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+  .temp-chip::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; box-shadow: 0 0 8px currentColor; }
+  .progress { height: 8px; background: var(--slate-100); border-radius: 4px; overflow: hidden; margin-top: 14px; }
+  .progress .fill { height: 100%; width: 80%; background: linear-gradient(135deg, #2563EB 0%, #7C3AED 100%); border-radius: 4px; box-shadow: 0 0 12px rgba(37,99,235,0.5); }
+  .route { display: flex; align-items: center; gap: 12px; margin-top: 8px; font-size: 13px; }
+  .route .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--blue-500); box-shadow: 0 0 0 3px rgba(37,99,235,0.15); }
+  .route .line { flex: 1; height: 2px; background: linear-gradient(90deg, var(--blue-500), var(--green-500)); position: relative; }
+  .route .line::after { content: "🚚"; position: absolute; top: -10px; left: 55%; font-size: 14px; }
+  .route .dot.dest { background: var(--green-500); box-shadow: 0 0 0 3px rgba(16,185,129,0.15); }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" style="width:20px;height:20px;">
+          <path d="M12 2l9 5v6c0 5-3.8 8.7-9 10-5.2-1.3-9-5-9-10V7l9-5z"/>
+          <path d="M9 12l2 2 4-4"/>
+        </svg>
+      </div>
+      <div class="brand-name">Pharma<span>Chain</span></div>
+    </div>
+    <nav class="nav">
+      <div class="nav-section">Workspace</div>
+      <a class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg> Dashboard</a>
+      <a class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 7l-8-4-8 4v10l8 4 8-4V7z"/><path d="M4 7l8 4 8-4M12 21V11"/></svg> Products</a>
+      <a class="nav-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 7h13v10H3zM16 10h5l-2 4h-3"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg> Shipments</a>
+      <a class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 7h16M4 12h16M4 17h10"/></svg> Audit Trail</a>
+      <div class="nav-section">Admin</div>
+      <a class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/></svg> Organizations</a>
+      <a class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg> Keys & Certs</a>
+    </nav>
+    <div class="sidebar-footer">FDA DSCSA compliant</div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div class="breadcrumbs">Home <span class="sep">/</span> Shipments <span class="sep">/</span> <b>SHP-2026-10-0042</b></div>
+      <div class="topbar-right">
+        <div class="search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3-3"/></svg>
+          <input placeholder="Search…">
+        </div>
+        <div class="icon-btn"><span class="dot"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 8a6 6 0 1112 0v5l2 3H4l2-3V8z"/><path d="M10 20a2 2 0 004 0"/></svg></div>
+        <div class="user-chip">
+          <div class="avatar">ML</div>
+          <div class="meta">
+            <div class="name">MedLogix</div>
+            <div class="role">Distributor</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="page-header">
+        <h1>Shipment SHP-2026-10-0042</h1>
+        <p>Live chain of custody · temperature-controlled · signed handoffs</p>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi">
+          <div class="label">Status</div>
+          <div class="value small" style="color:var(--blue-600);">In Transit</div>
+          <div class="delta">4 of 5 hops complete</div>
+        </div>
+        <div class="kpi">
+          <div class="label">Temperature</div>
+          <div class="value small" style="color:var(--green-600);">4.2 °C</div>
+          <div class="delta up">Within cold-chain range</div>
+        </div>
+        <div class="kpi">
+          <div class="label">ETA</div>
+          <div class="value small">08 Oct · 18:30</div>
+          <div class="delta">Bengaluru DC</div>
+        </div>
+        <div class="kpi">
+          <div class="label">Integrity</div>
+          <div class="value small" style="color:var(--green-600);">Verified</div>
+          <div class="delta up">Hash chain intact</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <h2>Live Route</h2>
+            <div class="sub">Mumbai Plant → Bengaluru DC</div>
+          </div>
+          <div class="actions">
+            <span class="temp-chip">4.2 °C stable</span>
+          </div>
+        </div>
+        <div class="route">
+          <span class="dot"></span>
+          <span style="font-weight:600; color:var(--navy-800);">Mumbai</span>
+          <span class="line"></span>
+          <span style="font-weight:600; color:var(--navy-800);">Bengaluru</span>
+          <span class="dot dest"></span>
+        </div>
+        <div class="progress"><div class="fill"></div></div>
+        <div style="display:flex; justify-content:space-between; margin-top:8px; font-size:12px; color:var(--slate-500);">
+          <span>Departed 08 Oct · 10:44</span>
+          <span>ETA 08 Oct · 18:30</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <h2>Actions</h2>
+            <div class="sub">All actions require digital signature</div>
+          </div>
+        </div>
+        <div style="display:flex; gap:12px;">
+          <button type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:15px;height:15px;"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>
+            Confirm Receipt
+          </button>
+          <button class="secondary" type="button">Transfer Ownership</button>
+          <button class="secondary" type="button">Raise Dispute</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <h2>Chain of Custody</h2>
+            <div class="sub">Every handoff signed and hash-linked to predecessor</div>
+          </div>
+          <div class="actions"><button class="ghost" type="button">Export signed PDF</button></div>
+        </div>
+
+        <div class="timeline">
+          <div class="tl-row">
+            <div class="tl-dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 6L9 17l-5-5"/></svg></div>
+            <div class="tl-line"></div>
+            <div class="tl-body">
+              <div class="tl-title">Product registered — Pfizer Ltd.</div>
+              <div class="tl-meta"><span>08 Oct · 09:12</span><span class="hash">a3f9…b12e</span><span class="badge green">Valid</span></div>
+            </div>
+          </div>
+
+          <div class="tl-row">
+            <div class="tl-dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 6L9 17l-5-5"/></svg></div>
+            <div class="tl-line"></div>
+            <div class="tl-body">
+              <div class="tl-title">Shipment created — Pfizer Ltd.</div>
+              <div class="tl-meta"><span>08 Oct · 09:18</span><span class="hash">c7d2…91fa</span><span class="badge green">Valid</span></div>
+            </div>
+          </div>
+
+          <div class="tl-row">
+            <div class="tl-dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 6L9 17l-5-5"/></svg></div>
+            <div class="tl-line"></div>
+            <div class="tl-body">
+              <div class="tl-title">Ownership transferred — MedLogix</div>
+              <div class="tl-meta"><span>08 Oct · 10:44</span><span class="hash">e1b8…7740</span><span class="badge green">Valid</span></div>
+            </div>
+          </div>
+
+          <div class="tl-row">
+            <div class="tl-dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 6L9 17l-5-5"/></svg></div>
+            <div class="tl-line"></div>
+            <div class="tl-body">
+              <div class="tl-title">Warehouse receipt — ColdStore WH-03</div>
+              <div class="tl-meta"><span>08 Oct · 14:03</span><span class="hash">5cf3…aa92</span><span class="badge green">Valid</span></div>
+            </div>
+          </div>
+
+          <div class="tl-row">
+            <div class="tl-dot pending"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div>
+            <div class="tl-body">
+              <div class="tl-title">Pending: Delivery to Apollo Pharmacy</div>
+              <div class="tl-meta"><span>ETA 08 Oct · 18:30</span><span class="badge amber">Awaiting signature</span></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+</div>
+</body>
+</html>
