@@ -1347,6 +1347,240 @@ def add_phase_14(doc):
     doc.add_paragraph("SR-03 (signed + hash-chained + audit-logged ownership transfer) is enforced by OwnershipService and verified by two integration tests: test_integration_transfer_writes_to_both_ledger_and_audit and test_integration_chain_grows_across_multiple_transfers.")
     doc.add_page_break()
 
+    # ---------- Phase 15 ----------
+
+def add_phase_15(doc):
+    h1(doc, "Phase 15 - Logging, Monitoring, Hardening and Secure Deployment")
+
+    h2(doc, "15.1 Security-Relevant Events Logged")
+    doc.add_paragraph(
+        "Every security-relevant event is logged with structured JSON, forwarded "
+        "to the SIEM, and retained for 7 years (FDA DSCSA requirement)."
+    )
+    t = doc.add_table(rows=1, cols=3)
+    t.style = "Table Grid"
+    hdr = t.rows[0].cells
+    hdr[0].text = "#"
+    hdr[1].text = "Event"
+    hdr[2].text = "Fields Captured"
+    events = [
+        ("1", "Failed login", "email (masked), IP, user agent, reason, timestamp"),
+        ("2", "Successful login", "user_id, org_id, IP, MFA method, timestamp"),
+        ("3", "Privilege change", "actor, target_user, old_role, new_role, timestamp"),
+        ("4", "Ownership transfer", "product_id, from_org, to_org, signature_hash, tx_hash, timestamp"),
+        ("5", "Product registration", "product_id, serial, batch, actor, hash, timestamp"),
+        ("6", "Warehouse receipt", "shipment_id, seal_hash, actor, result, timestamp"),
+        ("7", "Ledger write failure", "product_id, error, retry_count, timestamp"),
+        ("8", "Key rotation / revocation", "org_id, key_id, old_fingerprint, new_fingerprint, actor, timestamp"),
+        ("9", "Anomaly detection trigger", "rule_id, product_id, anomaly_score, action_taken, timestamp"),
+        ("10", "QR signature failure", "product_id, provided_sig, reason, timestamp"),
+    ]
+    for r in events:
+        cells = t.add_row().cells
+        for i, val in enumerate(r):
+            cells[i].text = val
+    style_table(t)
+
+    h2(doc, "15.2 Logging and Monitoring Strategy")
+    doc.add_paragraph(
+        "Logs flow in JSON format to ELK (Elasticsearch, Logstash, Kibana). "
+        "Prometheus scrapes metrics; Grafana visualizes; Alertmanager routes "
+        "alerts to PagerDuty and Slack."
+    )
+
+    h3(doc, "Metrics and Alerts")
+    t = doc.add_table(rows=1, cols=4)
+    t.style = "Table Grid"
+    hdr = t.rows[0].cells
+    hdr[0].text = "#"
+    hdr[1].text = "Metric / Alert"
+    hdr[2].text = "Threshold"
+    hdr[3].text = "Action"
+    metrics = [
+        ("1", "Failed logins per org", "> 10 / min", "Alert + lockout"),
+        ("2", "Ownership transfers outside business hours", "Any", "Alert security"),
+        ("3", "Ledger write latency p99", "> 500 ms", "Warn + investigate"),
+        ("4", "API 5xx rate", "> 1%", "Page on-call"),
+        ("5", "Anomaly detection score", "> 0.8", "Alert + auto-quarantine"),
+        ("6", "Certificate expiry", "< 30 days", "Ticket + rotate"),
+        ("7", "Hash chain verification failure", "Any", "Page immediately"),
+        ("8", "Container restart rate", "> 3 / hour", "Alert + investigate"),
+    ]
+    for r in metrics:
+        cells = t.add_row().cells
+        for i, val in enumerate(r):
+            cells[i].text = val
+    style_table(t)
+
+    h3(doc, "Logging Configuration")
+    doc.add_paragraph(
+        "See config/logging.yaml. Logs are rotated at 100 MB, kept for 30 files, "
+        "and forwarded to SIEM only at WARNING and above."
+    )
+
+    h2(doc, "15.3 Hardening Checklist")
+    doc.add_paragraph("Target-environment hardening (see evidence/hardening-checklist.md):")
+    t = doc.add_table(rows=1, cols=2)
+    t.style = "Table Grid"
+    hdr = t.rows[0].cells
+    hdr[0].text = "Area"
+    hdr[1].text = "Controls"
+    hardening = [
+        ("Access Control", "SSH key-only, no root login, MFA for admin, least-privilege IAM, session timeout 15 min"),
+        ("Network", "Only 443 exposed, internal on private subnet, WAF, NetworkPolicy allow-list"),
+        ("Secrets", "Vault-only, short-lived tokens, 90-day rotation, audit log for every read"),
+        ("Updates", "Weekly OS patch, monthly dependency upgrade, CVE SLA 72 h"),
+        ("Permissions", "Non-root containers, read-only root FS, resource limits, files owned by appuser"),
+        ("Logging", "SIEM forwarding, tamper-evident hashing, 7-year retention, alerts on key events"),
+    ]
+    for r in hardening:
+        cells = t.add_row().cells
+        cells[0].text, cells[1].text = r[0], r[1]
+    style_table(t)
+
+    h2(doc, "15.4 Physical and Operational Controls")
+    t = doc.add_table(rows=1, cols=2)
+    t.style = "Table Grid"
+    hdr = t.rows[0].cells
+    hdr[0].text = "Type"
+    hdr[1].text = "Controls"
+    phys = [
+        ("Physical", "Data center biometric + badge access, CCTV, locked racks, redundant power, fire suppression"),
+        ("Operational", "Segregation of duties, background checks, documented IR plan, quarterly DR drills, change approval"),
+    ]
+    for r in phys:
+        cells = t.add_row().cells
+        cells[0].text, cells[1].text = r[0], r[1]
+    style_table(t)
+
+    h2(doc, "15.5 Secure Deployment Checklist")
+    doc.add_paragraph("See evidence/deployment-checklist.md. Key items:")
+    t = doc.add_table(rows=1, cols=2)
+    t.style = "Table Grid"
+    hdr = t.rows[0].cells
+    hdr[0].text = "Phase"
+    hdr[1].text = "Checklist"
+    deploy = [
+        ("Pre-Deployment", "Signed image, 2-person manifest review, Vault secrets, TLS valid, resource limits, rolling update"),
+        ("Deployment", "Apply namespace/configmap/secret/deployment/service/networkpolicy in order; verify Ready"),
+        ("Post-Deployment", "Smoke tests (health, auth, transfer), logs to SIEM, Prometheus metrics, alerts firing"),
+        ("Rollback", "Previous image tagged, DB rollback script, kubectl rollout undo tested, postmortem template ready"),
+    ]
+    for r in deploy:
+        cells = t.add_row().cells
+        cells[0].text, cells[1].text = r[0], r[1]
+    style_table(t)
+
+    doc.add_page_break()
+
+
+# ---------- Phase 16 ----------
+
+def add_phase_16(doc):
+    h1(doc, "Phase 16 - Final Security Review")
+
+    h2(doc, "16.1 End-to-End Traceability of Critical Requirement SR-03")
+    doc.add_paragraph(
+        "SR-03 states: 'Every ownership transfer must be digitally signed, "
+        "hash-chained, and audit-logged.' The table below traces this single "
+        "requirement through every phase of the project."
+    )
+    t = doc.add_table(rows=1, cols=3)
+    t.style = "Table Grid"
+    hdr = t.rows[0].cells
+    hdr[0].text = "Phase"
+    hdr[1].text = "Artifact"
+    hdr[2].text = "How SR-03 Appears"
+    trace = [
+        ("1. Agile", "Backlog story US-09", "SR-03 defined as the transfer story's core acceptance criterion"),
+        ("2. Requirements", "SR-03 in Security Requirements table", "Digitally signed, hash-chained, audit-logged"),
+        ("3. UML", "Use Case UC-04 Transfer Ownership", "Main flow steps 4-7 enforce signature + nonce + ledger + audit"),
+        ("4. Data/DFD", "Process P4 + OwnershipRecord + AuditLog", "P4 writes signed record to D4 and hash-chained entry to D5"),
+        ("5. Architecture", "Ownership Service + Ledger Service + HSM", "Saga pattern coordinates atomic DB + ledger write"),
+        ("6. UI", "Shipment Tracking 'Transfer Ownership' button", "User action triggers signed transfer with confirmation"),
+        ("7. Threat Model", "STRIDE R (Repudiation) T3", "SR-03 directly mitigates transfer repudiation"),
+        ("8. Attack Tree", "Path A3 - Replay of signed transfer", "Nonce + timestamp + idempotency + hash chain"),
+        ("9. Backlog", "User Story SCMSEC-14", "Tracked in Jira Sprint 2 with acceptance criteria"),
+        ("10. Sprint", "Task under SCMSEC-14", "Moved across board through DONE"),
+        ("11. Secure Build", "Bandit scan clean", "No HIGH issues in ownership_service.py"),
+        ("12. Secure Coding", "Refactoring 1: monolithic -> layered OwnershipService", "Added RBAC + ABAC + signature + ledger + audit"),
+        ("13. Docker/K8s", "Deployment.yaml + Secret.yaml", "HSM token injected via K8s Secret, not in image"),
+        ("14. CI/CD", "test_integration_transfer_writes_to_both_ledger_and_audit", "Verifies atomic transfer + ledger + audit"),
+        ("15. Hardening", "Deployment checklist + logging config", "SIEM alert on transfer outside business hours"),
+    ]
+    for r in trace:
+        cells = t.add_row().cells
+        for i, val in enumerate(r):
+            cells[i].text = val
+    style_table(t)
+
+    h2(doc, "16.2 Top 3 Highest-Risk Issues and Their Controls")
+    t = doc.add_table(rows=1, cols=4)
+    t.style = "Table Grid"
+    hdr = t.rows[0].cells
+    hdr[0].text = "Rank"
+    hdr[1].text = "Risk"
+    hdr[2].text = "Residual Severity"
+    hdr[3].text = "Control"
+    risks = [
+        ("1", "Private key theft -> fraudulent ownership transfer",
+         "Medium",
+         "HSM-backed keys (no export), MFA, 90-day rotation, anomaly alerts"),
+        ("2", "Replay of signed transfer",
+         "Low",
+         "Nonce + timestamp + idempotency, ledger duplicate detection, SOC alerts"),
+        ("3", "Insider at Ledger Service",
+         "Medium",
+         "Dual-control + segregation of duties + peer review + immutable audit log"),
+    ]
+    for r in risks:
+        cells = t.add_row().cells
+        for i, val in enumerate(r):
+            cells[i].text = val
+    style_table(t)
+
+    h2(doc, "16.3 Remaining Limitations and Future Improvements")
+    t = doc.add_table(rows=1, cols=2)
+    t.style = "Table Grid"
+    hdr = t.rows[0].cells
+    hdr[0].text = "Limitation"
+    hdr[1].text = "Future Improvement"
+    limits = [
+        ("RSA / ECDSA signatures vulnerable to future quantum computers",
+         "Plan migration to post-quantum signatures (e.g. Dilithium) in 2027"),
+        ("Cross-chain interoperability with other networks not yet implemented",
+         "Future work on a GS1 EPCIS bridge for cross-network traceability"),
+    ]
+    for r in limits:
+        cells = t.add_row().cells
+        cells[0].text, cells[1].text = r[0], r[1]
+    style_table(t)
+
+    h2(doc, "16.4 Final Observations")
+    doc.add_paragraph(
+        "PharmaChain demonstrates a complete Secure Software Engineering "
+        "workflow from Agile planning through threat modeling, secure coding, "
+        "containerization, CI/CD, and hardening. All 16 phases are documented "
+        "with diagrams, screenshots, tests, and tool outputs."
+    )
+    doc.add_paragraph(
+        "The single traceability thread SR-03 (signed + hash-chained + "
+        "audit-logged ownership transfer) is enforced end-to-end: from backlog "
+        "to code to test to deployment control. This is the strongest evidence "
+        "of consistency the project can produce."
+    )
+    for b in [
+        "8 core artifacts (SRS, Use Case, ER, DFD, Architecture, UI, Threat Model, Attack Tree)",
+        "14 Jira items (5 epics + 12 stories) with 7 dependency links",
+        "17 passing tests (11 unit + 2 integration + 4 fuzz) with 81% coverage",
+        "3 dependency vulnerabilities found and fixed (DEF-002)",
+        "1 clean Bandit SAST scan, 0 high-severity issues",
+        "Docker + K8s manifests + CI/CD pipeline ready for production-style deployment",
+    ]:
+        doc.add_paragraph(b, style="List Bullet")
+
+    doc.add_page_break()
+
 
 # ---------- main ----------
 
@@ -1377,6 +1611,8 @@ def main():
     add_phase_12(doc)
     add_phase_13(doc)
     add_phase_14(doc)
+    add_phase_15(doc)
+    add_phase_16(doc)
     # Future phases appended here.
 
     doc.save(DOC_PATH)

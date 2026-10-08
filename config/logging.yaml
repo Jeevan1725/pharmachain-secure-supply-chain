@@ -1,0 +1,48 @@
+# PharmaChain - logging configuration
+version: 1
+disable_existing_loggers: false
+
+formatters:
+  json:
+    format: '{"ts":"%(asctime)s","level":"%(levelname)s","logger":"%(name)s","msg":"%(message)s","extra":%(message)s}'
+
+handlers:
+  security_file:
+    class: logging.handlers.RotatingFileHandler
+    filename: /var/log/pharmachain/security.log
+    maxBytes: 104857600
+    backupCount: 30
+    formatter: json
+    level: INFO
+
+  app_file:
+    class: logging.handlers.RotatingFileHandler
+    filename: /var/log/pharmachain/app.log
+    maxBytes: 104857600
+    backupCount: 30
+    formatter: json
+    level: INFO
+
+  siem_forwarder:
+    class: logging.handlers.SysLogHandler
+    address: ['siem.internal', 514]
+    formatter: json
+    level: WARNING
+
+loggers:
+  pharmachain.security:
+    level: INFO
+    handlers: [security_file, siem_forwarder]
+    propagate: false
+  pharmachain.audit:
+    level: INFO
+    handlers: [security_file, siem_forwarder]
+    propagate: false
+  pharmachain.ledger:
+    level: INFO
+    handlers: [security_file, siem_forwarder]
+    propagate: false
+  pharmachain:
+    level: INFO
+    handlers: [app_file]
+    propagate: false
